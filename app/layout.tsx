@@ -27,7 +27,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body className="min-h-screen flex flex-col">{children}</body>
+      <body className="min-h-screen flex flex-col antialiased" style={{ fontFamily: 'var(--font-pretendard)' }}>{children}</body>
     </html>
   );
 }

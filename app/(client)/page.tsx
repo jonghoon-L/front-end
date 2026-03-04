@@ -30,12 +30,21 @@ export default function Home() {
           color: 'white',
           textAlign: 'center'
         }}>
-          <p style={{ fontSize: 40 }}>
-            독학재수전문 수능선배는
-          </p>
-          <h1 style={{ fontSize: 40, fontWeight: 'bold', marginTop: 16 }}>
-            성공 노하우를<br />
-            전수하기 위해 존재합니다
+          <h1
+            className="-mt-16"
+            style={{
+              fontSize: 'clamp(28px, 5vw, 48px)',
+              lineHeight: 1.5,
+              letterSpacing: '-0.02em',
+            }}
+          >
+            <span className="font-normal" style={{ color: 'rgba(255,255,255,0.75)' }}>
+              ROADMAP은
+            </span>
+            <br />
+            <span className="font-bold" style={{ color: 'rgb(255,255,255)' }}>
+              차별화된 관리로 변화를 만듭니다
+            </span>
           </h1>
         </div>
 

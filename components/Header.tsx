@@ -1,8 +1,7 @@
-﻿'use client'
+'use client'
 
 import Link from "next/link";
-import { useEffect, useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { useState } from 'react'
 import Image from "next/image";
 
 type SubMenu = {
@@ -16,7 +15,17 @@ type Menu = {
   subMenus?: SubMenu[]
 }
 
-const menus: Menu[] = [
+/** 마침표(.)를 가운뎃점(·)으로 변환하여 가독성 향상 */
+function displayLabel(label: string): string {
+  return label.replace(/\./g, '·')
+}
+
+/** 서브 메뉴 라벨에서 "(1) ", "(2) " 등 번호 기호 제거 */
+function displaySubLabel(label: string): string {
+  return label.replace(/^\(\d+\)\s*/, '')
+}
+
+const infoMenus: Menu[] = [
   {
     label: 'ABOUT 로드맵',
     href: '/about/roadmap',
@@ -59,99 +68,94 @@ const menus: Menu[] = [
   {
     label: '명예의 전당',
     href: '/hall-of-fame/upload',
-    subMenus: [{ label: '입시 결과 파일 등록', href: '/hall-of-fame/upload' }],
   },
   {
     label: '이용 후기',
     href: '/reviews/register',
-    subMenus: [{ label: '기존 이용 후기 등록', href: '/reviews/register' }],
-  },
-  {
-    label: '상담 신청 / 등록 예약',
-    href: '/consulting',
   },
   {
     label: '게시판',
     href: '/board/study-materials',
-    subMenus: [{ label: '학업자료', href: '/board/study-materials' }],
   },
 ]
 
-export default function Header() {
-  const pathname = usePathname()
-  const isHome = pathname === '/'
+const ctaMenus: { label: string; href: string }[] = [
+  { label: '상담 신청', href: '/consulting' },
+  { label: '등록 예약', href: '/reservation' },
+]
 
-  const [scrolled, setScrolled] = useState(false)
+export default function Header() {
   const [openMobile, setOpenMobile] = useState(false)
   const [openMobileMenu, setOpenMobileMenu] = useState<number | null>(null)
-  const [isMobile, setIsMobile] = useState<boolean | null>(null)
-
-  const solid =
-    isMobile === null
-      ? openMobile
-      : !isMobile || !isHome || scrolled || openMobile
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8)
-    onScroll()
-    window.addEventListener('scroll', onScroll)
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
-
-  useEffect(() => {
-    const mq = window.matchMedia('(max-width: 1023px)')
-    const apply = () => setIsMobile(mq.matches)
-    apply()
-    mq.addEventListener('change', apply)
-    return () => mq.removeEventListener('change', apply)
-  }, [])
 
   return (
     <header
       className={[
-        'fixed top-0 left-0 right-0 z-50 transition-colors duration-300',
-        solid
-          ? 'bg-white/95 backdrop-blur border-b border-gray-200 text-gray-900'
-          : 'bg-transparent text-white',
+        'sticky top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 text-gray-900',
       ].join(' ')}
     >
-      <div className="mx-auto max-w-7xl px-6 py-4 flex items-center justify-between gap-8">
-        <Link href="/" className="shrink-0 whitespace-nowrap" aria-label="로드맵 홈">
+      <div className="mx-auto w-full max-w-[1600px] px-6 lg:px-12 py-3 flex items-center justify-between gap-6">
+        {/* [좌측] 로고 */}
+        <Link
+          href="/"
+          className="flex items-center gap-3 shrink-0"
+          aria-label="로드맵 홈"
+        >
           <Image
             src="/images/logo.png"
             alt="로드맵"
-            width={112}
-            height={32}
-            className="h-8 w-auto"
+            width={196}
+            height={56}
+            className="h-14 w-auto"
             priority
           />
+          <div className="flex flex-col mt-1.5">
+            <span className="text-xs text-gray-500 leading-tight">
+              입시관리형 독서실
+            </span>
+            <span className="text-2xl font-bold text-gray-800 leading-tight tracking-tight">
+              로드맵
+            </span>
+          </div>
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-6 text-sm">
-          {menus.map((menu) => (
+        {/* [중앙] 정보성 메뉴 - 데스크톱 */}
+        <nav className="hidden lg:flex flex-1 justify-center items-center gap-10 xl:gap-12 px-8">
+          {infoMenus.map((menu) => (
             <div key={menu.label} className="relative group">
               <Link
-                className={[
-                  'whitespace-nowrap transition-colors',
-                  solid ? 'hover:text-blue-700' : 'hover:text-white/80',
-                ].join(' ')}
                 href={menu.href}
+                className="relative inline-block whitespace-nowrap text-base font-medium text-gray-700 transition-colors duration-200 hover:text-emerald-700 py-2"
               >
-                {menu.label}
+                {displayLabel(menu.label)}
+                {/* 호버 시 밑줄 애니메이션 */}
+                <span
+                  className="absolute left-0 bottom-0 h-0.5 w-full bg-emerald-500 origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out"
+                />
               </Link>
 
               {menu.subMenus && menu.subMenus.length > 0 && (
-                <div className="absolute top-full left-1/2 -translate-x-1/2 hidden group-hover:block pt-4 z-50">
-                  <div className="w-64 bg-white shadow-lg border border-gray-100 py-2 text-gray-900">
+                <div
+                  className="absolute left-1/2 -translate-x-1/2 hidden group-hover:block z-50"
+                  style={{ top: '100%' }}
+                >
+                  <div className="pt-5">
+                    <div
+                      className="min-w-[200px] bg-white flex flex-col overflow-hidden"
+                      style={{
+                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -1px rgba(0,0,0,0.06)',
+                      }}
+                    >
                     {menu.subMenus.map((sub) => (
                       <Link
                         key={sub.href}
                         href={sub.href}
-                        className="block px-5 py-2 text-sm hover:bg-gray-50"
+                        className="block px-5 py-3 text-base text-gray-800 hover:text-emerald-600 transition-colors duration-200 text-center whitespace-nowrap"
                       >
-                        {sub.label}
+                        {displaySubLabel(sub.label)}
                       </Link>
                     ))}
+                    </div>
                   </div>
                 </div>
               )}
@@ -159,8 +163,22 @@ export default function Header() {
           ))}
         </nav>
 
+        {/* [우측] CTA 버튼 - 데스크톱 */}
+        <div className="hidden lg:flex items-center gap-3 shrink-0 ml-4">
+          {ctaMenus.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="inline-flex items-center justify-center px-5 py-2.5 text-base font-semibold rounded-full border-2 border-gray-800 text-gray-800 hover:bg-gray-800 hover:text-white transition-all duration-200"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+
+        {/* [모바일/태블릿] 햄버거 버튼 */}
         <button
-          className="lg:hidden p-2"
+          className="lg:hidden p-2.5 rounded-lg hover:bg-gray-100 transition-colors"
           onClick={() => {
             setOpenMobile((prev) => {
               const next = !prev
@@ -171,12 +189,12 @@ export default function Header() {
           aria-label={openMobile ? '메뉴 닫기' : '메뉴 열기'}
         >
           {openMobile ? (
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
           ) : (
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
               <path d="M4 7H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               <path d="M4 12H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               <path d="M4 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -185,37 +203,72 @@ export default function Header() {
         </button>
       </div>
 
+      {/* [모바일/태블릿] 사이드바 형태 드로어 */}
       <div
         className={[
-          'lg:hidden bg-white border-b border-gray-200',
-          'grid transition-[grid-template-rows,opacity] duration-300 ease-out',
-          openMobile ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0',
+          'lg:hidden fixed inset-0 z-40 transition-opacity duration-300',
+          openMobile ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none',
         ].join(' ')}
+        aria-hidden={!openMobile}
       >
-        <div className="overflow-hidden">
-          <div className="px-6 py-4 text-gray-900">
-            {menus.map((menu, index) => {
+        {/* 오버레이 백드롭 */}
+        <div
+          className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+          onClick={() => {
+            setOpenMobile(false)
+            setOpenMobileMenu(null)
+          }}
+        />
+
+        {/* 사이드바 패널 - 우측에서 슬라이드 */}
+        <aside
+          className={[
+            'absolute top-0 right-0 bottom-0 w-full max-w-sm bg-white shadow-2xl flex flex-col',
+            'transition-transform duration-300 ease-out',
+            openMobile ? 'translate-x-0' : 'translate-x-full',
+          ].join(' ')}
+        >
+          <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200">
+            <span className="text-lg font-bold text-gray-900">메뉴</span>
+            <button
+              className="p-2 rounded-lg hover:bg-gray-100"
+              onClick={() => {
+                setOpenMobile(false)
+                setOpenMobileMenu(null)
+              }}
+              aria-label="메뉴 닫기"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto py-4">
+            {infoMenus.map((menu, index) => {
               const hasSub = !!menu.subMenus?.length
               const expanded = openMobileMenu === index
 
               return (
-                <div key={menu.label} className="border-b border-gray-200 py-4">
-                  <div className="flex items-center justify-between gap-3">
+                <div key={menu.label} className="border-b border-gray-100">
+                  <div className="flex items-center justify-between gap-3 px-6 py-4">
                     <Link
                       href={menu.href}
                       onClick={() => {
-                        setOpenMobile(false)
-                        setOpenMobileMenu(null)
+                        if (!hasSub) {
+                          setOpenMobile(false)
+                          setOpenMobileMenu(null)
+                        }
                       }}
-                      className="text-base"
+                      className="text-base font-medium text-gray-800"
                     >
-                      {menu.label}
+                      {displayLabel(menu.label)}
                     </Link>
-
                     {hasSub && (
                       <button
                         type="button"
-                        className="p-1"
+                        className="p-2 -m-2"
                         onClick={() =>
                           setOpenMobileMenu((prev) => (prev === index ? null : index))
                         }
@@ -244,11 +297,11 @@ export default function Header() {
                   {hasSub && (
                     <div
                       className={[
-                        'overflow-hidden transition-[max-height,opacity] duration-300 ease-out',
-                        expanded ? 'max-h-72 opacity-100 mt-2' : 'max-h-0 opacity-0',
+                        'overflow-hidden transition-all duration-300 ease-out',
+                        expanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0',
                       ].join(' ')}
                     >
-                      <div className="pl-2 flex flex-col text-sm text-gray-700">
+                      <div className="bg-gray-50 px-6 py-3 flex flex-col gap-1">
                         {menu.subMenus!.map((sub) => (
                           <Link
                             key={sub.href}
@@ -257,9 +310,9 @@ export default function Header() {
                               setOpenMobile(false)
                               setOpenMobileMenu(null)
                             }}
-                            className="py-1.5"
+                            className="py-2.5 px-3 text-sm text-gray-600 hover:text-emerald-700 hover:bg-white rounded-lg transition-colors"
                           >
-                            {sub.label}
+                            {displaySubLabel(sub.label)}
                           </Link>
                         ))}
                       </div>
@@ -268,8 +321,25 @@ export default function Header() {
                 </div>
               )
             })}
+
+            {/* CTA 버튼 영역 - 하단 고정 */}
+            <div className="mt-6 px-6 pb-6 flex gap-3">
+              {ctaMenus.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => {
+                    setOpenMobile(false)
+                    setOpenMobileMenu(null)
+                  }}
+                  className="flex-1 inline-flex items-center justify-center py-3 rounded-full text-base font-semibold border-2 border-gray-800 text-gray-800 transition-all"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
+        </aside>
       </div>
     </header>
   )
