@@ -127,7 +127,7 @@ function NaverMapSection() {
   }, []);
 
   return (
-    <section className="bg-[#ebecee] pt-24 pb-32 md:pt-32 md:pb-40">
+    <section id="location" className="bg-[#ebecee] pt-24 pb-32 md:pt-32 md:pb-40">
       <div className="mx-auto max-w-6xl px-6">
         <h2 className="mb-24 text-center text-3xl font-bold text-gray-900 md:text-4xl lg:text-5xl">
           로드맵 오시는 길
