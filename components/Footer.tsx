@@ -4,6 +4,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
+const FOOTER_LINKS = [
+  { href: "/#location", label: "위치 및 시설 안내" },
+  { href: "/about/system", label: "관리시스템 안내" },
+  { href: "/about/teacher", label: "관리 T 소개" },
+] as const;
+
 export default function Footer() {
   const router = useRouter();
 
@@ -20,17 +26,17 @@ export default function Footer() {
       <div className="border-b border-white/10">
         <div className="mx-auto max-w-6xl px-6 py-6">
           <nav className="flex flex-wrap items-center justify-center gap-4 text-sm">
-            <Link className="hover:text-white" href="/location">
-              위치 및 시설 안내
-            </Link>
-            <span className="text-white/30">|</span>
-            <Link className="hover:text-white" href="/system">
-              학습시스템 소개
-            </Link>
-            <span className="text-white/30">|</span>
-            <Link className="hover:text-white" href="/pricing">
-              자문실반 비용 안내
-            </Link>
+            {FOOTER_LINKS.map((link, i) => (
+              <span key={link.href} className="contents">
+                {i > 0 && <span className="text-white/30">|</span>}
+                <Link
+                  className="transition-colors duration-200 hover:text-white hover:underline underline-offset-4"
+                  href={link.href}
+                >
+                  {link.label}
+                </Link>
+              </span>
+            ))}
           </nav>
         </div>
       </div>

@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Header from "./Header";
 import Footer from "./Footer";
+import HashScrollHandler from "./HashScrollHandler";
 
 export default function ClientShell({
   children,
@@ -18,8 +19,12 @@ export default function ClientShell({
 
   return (
     <>
+      <HashScrollHandler />
       <Header />
-      <div className={`client-shell-content flex-1 pt-0 -mt-px scroll-pt-20 ${pathname === "/" ? "pb-0" : "pb-12 md:pb-24"}`}>
+      <div
+        key={pathname}
+        className={`client-shell-content flex-1 pt-0 -mt-px scroll-pt-20 animate-[page-fade-in_0.5s_ease-out] ${pathname === "/" ? "pb-0" : "pb-12 md:pb-24"}`}
+      >
         {children}
       </div>
       <Footer />
