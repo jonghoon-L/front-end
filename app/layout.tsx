@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import ClientShell from "@/components/ClientShell";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +28,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
-      <body className="min-h-screen flex flex-col antialiased" style={{ fontFamily: 'var(--font-pretendard)' }}>{children}</body>
+      <body className="min-h-screen flex flex-col antialiased" style={{ fontFamily: 'var(--font-pretendard)' }}>
+        <ClientShell>{children}</ClientShell>
+      </body>
     </html>
   );
 }
