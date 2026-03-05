@@ -1,4 +1,4 @@
-﻿import PageHero from "@/components/PageHero";
+import PageHero from "@/components/PageHero";
 import { JSX } from "react";
 
 const emphasisPhrases = [
@@ -74,14 +74,14 @@ export default function AboutDiffPage() {
   return (
     <main>
       <PageHero
-        imageUrl="/images/place/n/n_p8.jpg"
+        imageUrl="/images/place/n/n_p9.jpg"
         lines={[
           "일반 관리형 독서실과의 차별화된 관리",
-          "로드맵의 관리 시스템",
+          "로드맵의 학습 관리",
         ]}
         crumbs={[
           { label: "ABOUT 로드맵" },
-          { label: "(2) 일반 관리형 독서실과의 차별화", href: "/about/diff" },
+          { label: "일반 관리형 독서실과의 차별화", href: "/about/diff" },
         ]}
       />
 

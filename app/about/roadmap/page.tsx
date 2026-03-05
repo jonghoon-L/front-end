@@ -14,7 +14,7 @@ export default function AboutRoadmapPage() {
         ]}
         crumbs={[
           { label: "ABOUT 로드맵" },
-          { label: "(1) ABOUT 로드맵", href: "/about/roadmap" },
+          { label: "ABOUT 로드맵", href: "/about/roadmap" },
         ]}
       />
 

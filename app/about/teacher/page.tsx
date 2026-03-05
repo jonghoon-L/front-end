@@ -1,4 +1,4 @@
-﻿import PageHero from "@/components/PageHero";
+import PageHero from "@/components/PageHero";
 import Image from "next/image";
 
 export default function AboutTeacherPage() {
@@ -31,13 +31,15 @@ export default function AboutTeacherPage() {
   return (
     <main>
       <PageHero
-        imageUrl="/images/place/n/n_p8.jpg"
+        imageUrl="/images/place/n/n_p3.jpg"
+        heroStyle={{ backgroundPosition: "center 70%", backgroundSize: "100% auto" }}
         lines={[
-          "목표를 현실로, 관리T"
+          "목표를 현실로",
+          "관리 T",
         ]}
         crumbs={[
           { label: "ABOUT 로드맵" },
-          { label: "(4) 관리T 소개", href: "/about/teacher" },
+          { label: "관리T 소개", href: "/about/teacher" },
         ]}
       />
 

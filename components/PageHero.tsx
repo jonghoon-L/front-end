@@ -3,6 +3,11 @@ import type { CSSProperties } from "react";
 
 type Crumb = { label: string; href?: string };
 
+/** 빵판 라벨에서 "(1) ", "(2) " 등 번호 프리픽스 제거 */
+function displayCrumbLabel(label: string): string {
+  return label.replace(/^\(\d+\)\s*/, "");
+}
+
 type PageHeroProps = {
   imageUrl: string;
   lines: string[];
@@ -56,32 +61,33 @@ export default function PageHero({
       </div>
 
       <div className={`border-b bg-white ${breadcrumbWrapClassName}`}>
-        <div className="mx-auto max-w-6xl px-6 py-4 text-sm text-gray-600 flex items-center gap-2">
-          <Link href="/" className="hover:text-gray-900">
-            <span className="inline-flex items-center gap-1">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1v-10.5z"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
+        <div className="mx-auto max-w-6xl px-6 py-4 text-sm text-gray-600 flex flex-wrap items-center gap-x-2 gap-y-1">
+          <Link href="/" className="inline-flex items-center justify-center shrink-0 hover:text-gray-900" aria-label="홈">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="shrink-0" aria-hidden>
+              <path
+                d="M3 10.5L12 3l9 7.5V21a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1v-10.5z"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinejoin="round"
+              />
+            </svg>
           </Link>
 
-          {crumbs.map((c, idx) => (
-            <span key={`${c.label}-${idx}`} className="flex items-center gap-2">
-              <span className="text-gray-300">{">"}</span>
-              {c.href ? (
-                <Link href={c.href} className="hover:text-gray-900">
-                  {c.label}
-                </Link>
-              ) : (
-                <span className="text-gray-900">{c.label}</span>
-              )}
-            </span>
-          ))}
+          {crumbs.map((c, idx) => {
+            const label = displayCrumbLabel(c.label);
+            return (
+              <span key={`${c.label}-${idx}`} className="inline-flex items-center gap-2">
+                <span className="text-gray-300 shrink-0">{">"}</span>
+                {c.href ? (
+                  <Link href={c.href} className="inline-flex items-center hover:text-gray-900">
+                    {label}
+                  </Link>
+                ) : (
+                  <span className="inline-flex items-center text-gray-900">{label}</span>
+                )}
+              </span>
+            );
+          })}
         </div>
       </div>
     </section>

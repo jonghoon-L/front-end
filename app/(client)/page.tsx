@@ -8,7 +8,7 @@ export default function Home() {
         height: '100vh',
         backgroundImage: "url('/images/main.jpg')",
         backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        backgroundPosition: 'center top',
         position: 'relative'
       }}>
         {/* 어두운 오버레이 */}
