@@ -19,7 +19,7 @@ export default function ClientShell({
   return (
     <>
       <Header />
-      <div className="client-shell-content flex-1 pt-0 -mt-px pb-12 md:pb-24 scroll-pt-20">
+      <div className={`client-shell-content flex-1 pt-0 -mt-px scroll-pt-20 ${pathname === "/" ? "pb-0" : "pb-12 md:pb-24"}`}>
         {children}
       </div>
       <Footer />

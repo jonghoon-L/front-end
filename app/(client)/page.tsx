@@ -1,16 +1,25 @@
 import Image from "next/image";
+import { ChevronDown } from "lucide-react";
+import HomeSections from "@/components/HomeSections";
 
 export default function Home() {
   return (
     <main>
       {/* 히어로 영역 */}
       <section style={{
-        height: '100vh',
-        backgroundImage: "url('/images/main.jpg')",
-        backgroundSize: 'cover',
-        backgroundPosition: 'center top',
-        position: 'relative'
+        height: '92vh',
+        position: 'relative',
+        overflow: 'hidden'
       }}>
+        {/* 배경 이미지 (그레이스케일) */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: "url('/images/place/n/n_p1.jpg')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center 60%',
+          filter: 'grayscale(100%)'
+        }} />
         {/* 어두운 오버레이 */}
         <div style={{
           position: 'absolute',
@@ -22,16 +31,19 @@ export default function Home() {
         {/* 텍스트 */}
         <div style={{
           position: 'relative',
+          zIndex: 1,
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
           color: 'white',
-          textAlign: 'center'
+          textAlign: 'center',
+          paddingBottom: '12vh'
         }}>
           <h1
             style={{
+              fontFamily: 'var(--font-pretendard)',
               fontSize: 'clamp(28px, 5vw, 48px)',
               lineHeight: 1.5,
               letterSpacing: '-0.02em',
@@ -47,10 +59,12 @@ export default function Home() {
           </h1>
         </div>
 
-        <div className="absolute bottom-30 left-1/2 -translate-x-1/2 animate-bounce text-white text-3xl select-none">
-        ∨
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-0 animate-bounce select-none">
+          <ChevronDown className="w-12 h-12 text-white drop-shadow-md md:w-14 md:h-14" strokeWidth={2} />
         </div>
       </section>
+
+      <HomeSections />
     </main>
   );
 }
