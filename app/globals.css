@@ -29,6 +29,16 @@ body {
   font-family: var(--font-pretendard);
 }
 
+/* 본문 상단 여백: 빵판 기본 여백과 겹치지 않도록 시각적 대칭 맞춤 (절반 수준) */
+.client-shell-content main > *:nth-child(2) {
+  margin-top: 1.5rem; /* 24px - 상단 축소로 빵판~카드 거리와 카드~푸터 거리 시각적 균형 */
+}
+@media (min-width: 768px) {
+  .client-shell-content main > *:nth-child(2) {
+    margin-top: 3rem; /* 48px */
+  }
+}
+
 @keyframes error-slide-in {
   from {
     opacity: 0;

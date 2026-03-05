@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <main>
       {/* 히어로 영역 */}
-      <section className="-mt-16" style={{
+      <section style={{
         height: '100vh',
         backgroundImage: "url('/images/main.jpg')",
         backgroundSize: 'cover',
@@ -31,7 +31,6 @@ export default function Home() {
           textAlign: 'center'
         }}>
           <h1
-            className="-mt-16"
             style={{
               fontSize: 'clamp(28px, 5vw, 48px)',
               lineHeight: 1.5,
