@@ -15,9 +15,9 @@ export default function Home() {
         <div style={{
           position: 'absolute',
           inset: 0,
-          backgroundImage: "url('/images/place/n/n_p1.jpg')",
+          backgroundImage: "url('/images/place/hi/hi_p7.jpg')",
           backgroundSize: 'cover',
-          backgroundPosition: 'center 60%',
+          backgroundPosition: 'center 75%',
           filter: 'grayscale(100%)'
         }} />
         {/* 어두운 오버레이 */}

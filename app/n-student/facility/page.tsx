@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Fragment, useState } from "react";
 import Image from "next/image";
@@ -71,13 +71,13 @@ export default function NStudentFacilityPage() {
                 style={{ transform: `translateX(-${currentIndex * 100}%)` }}
               >
                 {facilities.map((facility, index) => (
-                  <div key={facility.image} className="w-full shrink-0">
+                  <div key={facility.image} className="relative w-full shrink-0 aspect-[16/10]">
                     <Image
                       src={facility.image}
                       alt={`로드맵 N수생 전용관 ${facility.name}`}
-                      width={1600}
-                      height={1000}
-                      className="h-auto w-full object-cover"
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 60vw"
+                      className="object-cover"
                       priority={index === 0}
                     />
                   </div>

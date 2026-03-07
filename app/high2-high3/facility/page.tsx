@@ -1,13 +1,18 @@
-﻿"use client";
+"use client";
 
 import { Fragment, useState } from "react";
 import Image from "next/image";
 import PageHero from "@/components/PageHero";
 
-const facilities = Array.from({ length: 9 }, (_, index) => ({
-  name: `시설 ${index + 1}`,
-  image: `/images/place/n/n_p${index + 1}.jpg`,
-}));
+const facilities = [
+  { name: "시설 1", image: "/images/place/hi/hi_p2.jpg" },
+  { name: "시설 2", image: "/images/place/hi/hi_p4.jpg" },
+  { name: "시설 3", image: "/images/place/hi/hi_p5.jpg" },
+  { name: "시설 4", image: "/images/place/hi/hi_p8.jpg" },
+  { name: "시설 5", image: "/images/place/hi/hi_p9.jpg" },
+  { name: "시설 6", image: "/images/place/hi/hi_p10.jpg" },
+  { name: "시설 7", image: "/images/place/hi/hi_p12.jpg" },
+];
 
 export default function High2High3FacilityPage() {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -71,13 +76,13 @@ export default function High2High3FacilityPage() {
                 style={{ transform: `translateX(-${currentIndex * 100}%)` }}
               >
                 {facilities.map((facility, index) => (
-                  <div key={facility.image} className="w-full shrink-0">
+                  <div key={facility.image} className="relative w-full shrink-0 aspect-[16/10]">
                     <Image
                       src={facility.image}
                       alt={`로드맵 고2.고3 전용관 ${facility.name}`}
-                      width={1600}
-                      height={1000}
-                      className="h-auto w-full object-cover"
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 60vw"
+                      className="object-cover"
                       priority={index === 0}
                     />
                   </div>
