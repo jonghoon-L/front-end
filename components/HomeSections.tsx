@@ -8,10 +8,15 @@ const N_FACILITIES = Array.from({ length: 6 }, (_, i) => ({
   image: `/images/place/n/n_p${i + 1}.jpg`,
 }));
 
-const H_FACILITIES = Array.from({ length: 4 }, (_, i) => ({
-  name: `하이엔드관 시설 ${i + 1}`,
-  image: `/images/place/n/n_p${i + 6}.jpg`,
-}));
+const H_FACILITIES = [
+  { name: "하이엔드관 시설 1", image: "/images/place/hi/hi_p2.jpg" },
+  { name: "하이엔드관 시설 2", image: "/images/place/hi/hi_p4.jpg" },
+  { name: "하이엔드관 시설 3", image: "/images/place/hi/hi_p5.jpg" },
+  { name: "하이엔드관 시설 4", image: "/images/place/hi/hi_p8.jpg" },
+  { name: "하이엔드관 시설 5", image: "/images/place/hi/hi_p9.jpg" },
+  { name: "하이엔드관 시설 6", image: "/images/place/hi/hi_p10.jpg" },
+  { name: "하이엔드관 시설 7", image: "/images/place/hi/hi_p12.jpg" },
+];
 
 const DIFF_CARDS = [
   {
