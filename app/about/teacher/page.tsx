@@ -33,22 +33,23 @@ export default function AboutTeacherPage() {
       <PageHero
         imageUrl="/images/place/n/n_p3.jpg"
         heroStyle={{ backgroundPosition: "center 70%", backgroundSize: "100% auto" }}
-        lines={[
-          "목표를 현실로",
-          "관리 T",
-        ]}
+        lines={["관리 T 소개"]}
         crumbs={[
           { label: "ABOUT 로드맵" },
           { label: "관리T 소개", href: "/about/teacher" },
         ]}
       />
 
-      <section className="py-16">
+      <section
+        className="w-full px-4 py-16 pt-0 md:px-6 lg:px-8"
+        style={{ marginTop: "80px" }}
+      >
         <div className="mx-auto max-w-6xl px-6">
-          <div className="mb-10">
-            <p className="text-sm font-semibold tracking-[0.2em] text-emerald-700">TEACHERS</p>
-            <h2 className="mt-2 text-3xl font-extrabold text-gray-900 md:text-4xl">관리T 소개</h2>
-          </div>
+          {/* 상단 메인 타이틀 (관리시스템과 동일 스타일) */}
+          <h2 className="mb-20 mt-0 text-center text-3xl font-bold leading-tight text-gray-900 md:text-4xl">
+            <span className="block">목표를 현실로 바꿔주는</span>
+            <span className="block">로드맵의 관리 선생님들을 소개합니다</span>
+          </h2>
 
           <div className="space-y-8">
             {directors.map((director) => (

@@ -18,8 +18,17 @@ export default function AboutRoadmapPage() {
         ]}
       />
 
-      <section className="w-full py-12">
+      <section
+        className="w-full px-4 py-12 pt-0 md:px-6 lg:px-8"
+        style={{ marginTop: "80px" }}
+      >
         <div className="mx-auto max-w-7xl px-6">
+          {/* 상단 메인 타이틀 (관리시스템과 동일 스타일) */}
+          <h2 className="mb-20 mt-0 text-center text-3xl font-bold leading-tight text-gray-900 md:text-4xl">
+            <span className="block">타협 없는 철저함으로 완성된 몰입의 공간</span>
+            <span className="block">로드맵을 소개합니다</span>
+          </h2>
+
           <article>
             <div className="grid lg:grid-cols-[1.4fr_1fr] min-h-[500px] lg:min-h-[560px]">
               {/* 왼쪽: 시설 사진 배경 + 흰색 반투명 오버레이 + 텍스트 */}

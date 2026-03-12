@@ -76,8 +76,8 @@ export default function AboutDiffPage() {
       <PageHero
         imageUrl="/images/place/n/n_p9.jpg"
         lines={[
-          "일반 관리형 독서실과의 차별화된 관리",
-          "로드맵의 학습 관리",
+          "로드맵은",
+          "일반 관리형 독서실과 다릅니다",
         ]}
         crumbs={[
           { label: "ABOUT 로드맵" },
