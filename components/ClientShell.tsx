@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Header from "./Header";
 import Footer from "./Footer";
@@ -12,6 +13,12 @@ export default function ClientShell({
 }) {
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith("/admin");
+
+  useEffect(() => {
+    if (pathname === "/") {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    }
+  }, [pathname]);
 
   if (isAdmin) {
     return <>{children}</>;

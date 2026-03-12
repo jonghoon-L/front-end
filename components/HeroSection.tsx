@@ -6,7 +6,8 @@ export default function HeroSection() {
   return (
     <section
       style={{
-        height: "92vh",
+        height: "calc(100vh - 80px)",
+        minHeight: "calc(100vh - 80px)",
         position: "relative",
         overflow: "hidden",
       }}
@@ -17,7 +18,7 @@ export default function HeroSection() {
         style={{
           position: "absolute",
           inset: 0,
-          backgroundImage: "url('/images/place/hi/hi_p7.jpg')",
+          backgroundImage: "url('/images/place/hi/hi_p13.jpg')",
           backgroundSize: "cover",
           backgroundPosition: "center 75%",
           filter: "grayscale(100%)",
@@ -47,6 +48,7 @@ export default function HeroSection() {
           color: "white",
           textAlign: "center",
           paddingBottom: "12vh",
+          marginTop: "30px",
         }}
       >
         <h1
@@ -57,7 +59,7 @@ export default function HeroSection() {
             letterSpacing: "-0.02em",
           }}
         >
-          <span className="font-normal" style={{ color: "rgba(255,255,255,0.75)" }}>
+          <span style={{ color: "rgba(255,255,255,0.75)", fontWeight: 300 }}>
             ROADMAP은
           </span>
           <br />

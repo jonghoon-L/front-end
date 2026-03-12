@@ -24,11 +24,14 @@ const HIGH23_INFO = {
 const PIN_SVG =
   '<path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2Z" fill="{FILL}" stroke="white" stroke-width="1.5" style="filter: drop-shadow(0px 4px 4px rgba(0,0,0,0.25));"/><circle cx="12" cy="9" r="3" fill="white"/>';
 
-function createPinMarkerHtml(label: string, fillColor: string) {
+const BOUNCE_STYLE =
+  '<style>@keyframes marker-pin-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-15px)}}.marker-pin-bounce{animation:marker-pin-bounce 1.5s ease-in-out infinite}</style>';
+
+function createPinMarkerHtml(label: string, fillColor: string, includeStyle = false) {
   const svgContent = PIN_SVG.replace("{FILL}", fillColor);
-  return `<div style="display: flex; flex-direction: column; align-items: center; width: 140px; pointer-events: none;">
-  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${svgContent}</svg>
-  <div style="margin-top: 4px; background-color: white; color: #333; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 13px; box-shadow: 0px 2px 8px rgba(0,0,0,0.15); border: 1px solid #eee; white-space: nowrap;">${label}</div>
+  return `<div style="display:flex;flex-direction:column;align-items:center;width:140px;pointer-events:none">${includeStyle ? BOUNCE_STYLE : ""}
+<div class="marker-pin-bounce"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">${svgContent}</svg></div>
+<div style="margin-top:4px;background:#fff;color:#333;padding:4px 10px;border-radius:8px;font-weight:800;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,0.15);border:1px solid #eee;white-space:nowrap">${label}</div>
 </div>`;
 }
 
@@ -52,9 +55,19 @@ function NaverMapSection() {
     let mounted = true;
     let intervalId: ReturnType<typeof setInterval> | null = null;
 
+    function injectMarkerBounceStyle() {
+      if (document.getElementById("naver-marker-bounce-style")) return;
+      const style = document.createElement("style");
+      style.id = "naver-marker-bounce-style";
+      style.textContent = `@keyframes marker-pin-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-15px)}}.marker-pin-bounce{animation:marker-pin-bounce 1.5s ease-in-out infinite;animation-delay:0ms}`;
+      document.head.appendChild(style);
+    }
+
     function initMap() {
       if (mapInstanceRef.current || !mounted) return;
       if (!window.naver?.maps || !mapRef.current) return;
+
+      injectMarkerBounceStyle();
 
       const map = new naver.maps.Map(mapRef.current, {
         center: new naver.maps.LatLng(MAP_CENTER.lat, MAP_CENTER.lng),
@@ -72,7 +85,7 @@ function NaverMapSection() {
         position: new naver.maps.LatLng(HIGH23_COORDS.lat, HIGH23_COORDS.lng),
         map,
         icon: {
-          content: createPinMarkerHtml(HIGH23_INFO.label, "#f87171"), // 옅은 빨간색
+          content: createPinMarkerHtml(HIGH23_INFO.label, "#f87171", true), // 옅은 빨간색 + 스타일(iframe 대비)
           anchor: ANCHOR,
         },
       });
@@ -123,11 +136,13 @@ function NaverMapSection() {
       }
       const scriptEl = document.getElementById(scriptId);
       if (scriptEl) scriptEl.remove();
+      const styleEl = document.getElementById("naver-marker-bounce-style");
+      if (styleEl) styleEl.remove();
     };
   }, []);
 
   return (
-    <section id="location" className="bg-[#ebecee] pt-24 pb-32 md:pt-32 md:pb-40">
+    <section id="location" className="bg-[#ebecee] pt-12 pb-32 md:pt-16 md:pb-40">
       <div className="mx-auto max-w-6xl px-6">
         <h2 className="mb-24 text-center text-3xl font-bold text-gray-900 md:text-4xl lg:text-5xl">
           로드맵 오시는 길
@@ -135,13 +150,13 @@ function NaverMapSection() {
 
         {/* 단일 지도 영역 */}
         <div
-          className="relative mx-auto overflow-hidden rounded-2xl shadow-lg"
-          style={{ height: "480px", maxWidth: "1152px" }}
+          className="relative mx-auto overflow-hidden rounded-none shadow-lg"
+          style={{ height: "560px", maxWidth: "1152px" }}
         >
           {loadError ? (
             <div
               className="flex h-full items-center justify-center bg-gray-200 text-center text-gray-600"
-              style={{ minHeight: "480px" }}
+              style={{ minHeight: "560px" }}
             >
               <p className="px-4">{loadError}</p>
             </div>
@@ -157,7 +172,7 @@ function NaverMapSection() {
         </div>
 
         {/* 하단 상세 정보 2단 레이아웃 */}
-        <div className="mt-12 grid grid-cols-1 gap-12 md:grid-cols-2 md:gap-12">
+        <div className="mt-8 grid grid-cols-1 gap-12 md:grid-cols-2 md:gap-12">
           {/* 고2·고3 전용관 (왼쪽) */}
           <div className="rounded-xl bg-white p-8 shadow-md">
             <h3 className="mb-6 text-xl font-bold text-gray-900">고2·고3 전용관(하이엔드관)</h3>

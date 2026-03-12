@@ -106,14 +106,16 @@ export default function HomeSections() {
       <section ref={s1.ref} className="pt-16 pb-28 md:pt-20 md:pb-32" style={{ backgroundColor: "#0a1e32", marginTop: 0 }}>
         <div className="mx-auto max-w-6xl px-6">
           <h2
-            className="mb-12 text-center text-4xl font-bold text-white md:text-5xl transition-all duration-700 ease-out"
+            className="mb-12 text-center text-4xl text-white md:text-5xl transition-all duration-700 ease-out"
             style={{
               opacity: s1.isVisible ? 1 : 0,
               transform: s1.isVisible ? "translateY(0)" : "translateY(24px)",
+              lineHeight: 1.5,
+              letterSpacing: "-0.02em",
             }}
           >
-            <span className="block">ROADMAP은</span>
-            <span className="block">실적으로 증명합니다</span>
+            <span className="block font-light" style={{ fontWeight: 300, color: "rgba(255,255,255,0.75)" }}>ROADMAP은</span>
+            <span className="block font-bold" style={{ color: "rgb(255,255,255)" }}>실적으로 증명합니다</span>
           </h2>
           <div
             className="mx-auto flex max-w-4xl justify-center transition-all duration-700 ease-out"
@@ -192,11 +194,11 @@ export default function HomeSections() {
         <div className="mx-auto max-w-6xl px-6">
           {/* Row 1: N수관 */}
           <div
-            className="relative mb-16 py-8 md:mb-20 md:py-10 transition-all duration-700 ease-out"
+            className="relative mb-16 py-8 md:mb-20 md:py-10 transition-all ease-out"
             style={{
               opacity: s3.isVisible ? 1 : 0,
               transform: s3.isVisible ? "translateY(0)" : "translateY(20px)",
-              transitionDelay: s3.isVisible ? "120ms" : "0ms",
+              transitionDuration: "1.35s",
             }}
           >
             <div
@@ -218,11 +220,11 @@ export default function HomeSections() {
 
           {/* Row 2: 고2·고3 전용관 */}
           <div
-            className="relative py-8 md:py-10 transition-all duration-700 ease-out"
+            className="relative py-8 md:py-10 transition-all ease-out"
             style={{
               opacity: s3.isVisible ? 1 : 0,
               transform: s3.isVisible ? "translateY(0)" : "translateY(20px)",
-              transitionDelay: s3.isVisible ? "240ms" : "0ms",
+              transitionDuration: "1.35s",
             }}
           >
             <div
@@ -247,10 +249,11 @@ export default function HomeSections() {
       {/* Section 4: 오시는 길 - 사르르 등장 */}
       <div
         ref={s4.ref}
-        className="transition-all duration-700 ease-out"
+        className="transition-all ease-out"
         style={{
           opacity: s4.isVisible ? 1 : 0,
           transform: s4.isVisible ? "translateY(0)" : "translateY(24px)",
+          transitionDuration: "1.2s",
         }}
       >
         <NaverMapSection />
