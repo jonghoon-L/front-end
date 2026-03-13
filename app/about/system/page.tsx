@@ -32,7 +32,7 @@ export default function AboutSystemPage() {
   return (
     <main>
       <PageHero
-        imageUrl="/images/place/hi/hi_p14.jpg"
+        imageUrl="/images/place/hi/hi_p10.jpg"
         heroStyle={{ backgroundPosition: "center 53%", backgroundSize: "100% auto" }}
         lines={[
           "로드맵만의 특화된",

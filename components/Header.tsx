@@ -42,7 +42,7 @@ const infoMenus: Menu[] = [
     subMenus: [
       { label: '시설 사진', href: '/high2-high3/facility' },
       { label: '시간표', href: '/high2-high3/timetable' },
-      { label: '이용료', href: '/high2-high3/price' },
+      { label: '이용료 및 환불 규정', href: '/high2-high3/price' },
     ],
   },
   {
@@ -51,8 +51,8 @@ const infoMenus: Menu[] = [
     subMenus: [
       { label: '시설 사진', href: '/n-student/facility' },
       { label: '시간표', href: '/n-student/timetable' },
-      { label: '이용료', href: '/n-student/price' },
-      { label: '더프 모의고사 + 교육청', href: '/n-student/mock-test' },
+      { label: '이용료 및 환불 규정', href: '/n-student/price' },
+      { label: '교육청 + 더프 모의고사', href: '/n-student/mock-test' },
     ],
   },
   {

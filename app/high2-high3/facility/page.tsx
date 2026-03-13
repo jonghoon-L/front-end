@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import Image from "next/image";
 import PageHero from "@/components/PageHero";
 
@@ -8,31 +8,52 @@ const facilities = [
   { name: "시설 1", image: "/images/place/hi/hi_p2.jpg" },
   { name: "시설 2", image: "/images/place/hi/hi_p4.jpg" },
   { name: "시설 3", image: "/images/place/hi/hi_p5.jpg" },
-  { name: "시설 4", image: "/images/place/hi/hi_p8.jpg" },
+  { name: "시설 4", image: "/images/place/hi/hi_p13.jpg" },
   { name: "시설 5", image: "/images/place/hi/hi_p9.jpg" },
   { name: "시설 6", image: "/images/place/hi/hi_p10.jpg" },
   { name: "시설 7", image: "/images/place/hi/hi_p12.jpg" },
 ];
 
+const N = facilities.length;
+// 앞뒤에 클론 추가: [마지막, ...원본, 첫번째] - 7→1 시 정방향, 1→7 시 정방향
+const extendedSlides = [facilities[N - 1], ...facilities, facilities[0]];
+
 export default function High2High3FacilityPage() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const currentFacility = facilities[currentIndex];
+  const [slideIndex, setSlideIndex] = useState(1);
+  const [disableTransition, setDisableTransition] = useState(false);
+  const currentFacility = facilities[((slideIndex - 1) % N + N) % N];
 
-  const goPrev = () => {
-    setCurrentIndex((prev) => (prev - 1 + facilities.length) % facilities.length);
-  };
+  const goPrev = () => setSlideIndex((prev) => prev - 1);
+  const goNext = () => setSlideIndex((prev) => prev + 1);
 
-  const goNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % facilities.length);
-  };
+  const goToIndex = (index: number) => setSlideIndex(index + 1);
+
+  useEffect(() => {
+    if (slideIndex === 0) {
+      const t = setTimeout(() => {
+        setDisableTransition(true);
+        setSlideIndex(N);
+        requestAnimationFrame(() => requestAnimationFrame(() => setDisableTransition(false)));
+      }, 520);
+      return () => clearTimeout(t);
+    } else if (slideIndex === extendedSlides.length - 1) {
+      const t = setTimeout(() => {
+        setDisableTransition(true);
+        setSlideIndex(1);
+        requestAnimationFrame(() => requestAnimationFrame(() => setDisableTransition(false)));
+      }, 520);
+      return () => clearTimeout(t);
+    }
+  }, [slideIndex]);
 
   return (
     <main>
       <PageHero
-        imageUrl="/images/place/n/n_p7.jpg"
-        lines={["로드맵 고2.고3 전용관", "시설 둘러보기"]}
+        imageUrl="/images/place/hi/hi_p12.jpg"
+        lines={["로드맵 고2·고3 전용관", "시설 둘러보기"]}
+        heroStyle={{ backgroundPosition: "center 60%" }}
         crumbs={[
-          { label: "로드맵 고2.고3 전용관" },
+          { label: "로드맵 고2·고3 전용관" },
           { label: "시설 사진", href: "/high2-high3/facility" },
         ]}
       />
@@ -40,18 +61,21 @@ export default function High2High3FacilityPage() {
       <section className="bg-emerald-950 py-16 md:py-20">
         <div className="mx-auto max-w-6xl px-6">
           <div className="grid gap-10 lg:grid-cols-[320px_1fr] lg:items-center">
-          <div className="text-white">
-            <p className="text-4xl font-bold leading-tight md:text-5xl">시설 둘러보기</p>
-            <p className="mt-8 text-3xl font-extrabold md:text-4xl">{currentFacility.name}</p>
+          <div className="flex flex-col items-start text-left text-white">
+            <div className="-mt-12 md:-mt-16">
+              <p className="text-xl font-medium tracking-tight text-white/90 md:text-2xl" style={{ letterSpacing: 0 }}>하이엔드관</p>
+              <p className="mt-2 text-4xl font-extrabold leading-tight tracking-tight md:text-5xl" style={{ letterSpacing: 0 }}>시설 둘러보기</p>
+            </div>
+            <p className="mt-16 text-2xl font-semibold tracking-tight md:text-3xl" style={{ letterSpacing: 0 }}>{currentFacility.name}</p>
 
-            <div className="mt-6 flex max-w-[320px] flex-wrap items-center gap-x-4 gap-y-3 text-sm text-white/75">
+            <div className="mt-10 flex max-w-[320px] flex-wrap items-center gap-x-4 gap-y-3 text-sm text-white/75">
               {facilities.map((facility, index) => {
-                const isActive = currentIndex === index;
+                const isActive = slideIndex === index + 1;
                 return (
                   <Fragment key={facility.name}>
                     <button
                       type="button"
-                      onClick={() => setCurrentIndex(index)}
+                      onClick={() => goToIndex(index)}
                       className={[
                         "border-b border-transparent pb-0.5 transition",
                         isActive
@@ -72,11 +96,14 @@ export default function High2High3FacilityPage() {
           <div className="relative">
             <div className="overflow-hidden">
               <div
-                className="flex transition-transform duration-500 ease-in-out"
-                style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+                className="flex"
+                style={{
+                  transform: `translateX(-${slideIndex * 100}%)`,
+                  transition: disableTransition ? "none" : "transform 500ms ease-in-out",
+                }}
               >
-                {facilities.map((facility, index) => (
-                  <div key={facility.image} className="relative w-full shrink-0 aspect-[16/10]">
+                {extendedSlides.map((facility, index) => (
+                  <div key={`${facility.image}-${index}`} className="relative min-w-full shrink-0 basis-full aspect-[16/10]">
                     <Image
                       src={facility.image}
                       alt={`로드맵 고2.고3 전용관 ${facility.name}`}
