@@ -159,23 +159,23 @@ body {
 }
 
 .motion-rise {
-  animation: rise-in 700ms ease-out both;
+  animation: rise-in 1100ms ease-out both;
 }
 
 .motion-delay-1 {
-  animation-delay: 120ms;
+  animation-delay: 200ms;
 }
 
 .motion-delay-2 {
-  animation-delay: 220ms;
+  animation-delay: 350ms;
 }
 
 .motion-delay-3 {
-  animation-delay: 320ms;
+  animation-delay: 500ms;
 }
 
 .motion-delay-4 {
-  animation-delay: 420ms;
+  animation-delay: 650ms;
 }
 
 /* 메인 페이지 히어로 - 사르르 등장 */

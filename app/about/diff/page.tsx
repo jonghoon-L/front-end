@@ -106,7 +106,7 @@ export default function AboutDiffPage() {
               <article
                 key={point.number}
                 className="motion-rise relative mx-auto max-w-5xl rounded-2xl border border-emerald-200 bg-emerald-50/55 px-6 pb-6 pt-8 text-center shadow-[0_6px_14px_rgba(15,23,42,0.08)]"
-                style={{ animationDelay: `${160 + index * 120}ms` }}
+                style={{ animationDelay: `${220 + index * 180}ms` }}
               >
                 <p className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-emerald-700 px-2.5 py-1 text-base font-semibold leading-none text-white shadow-sm">
                   {point.number}

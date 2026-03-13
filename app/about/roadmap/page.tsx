@@ -24,7 +24,7 @@ export default function AboutRoadmapPage() {
       >
         <div className="mx-auto max-w-7xl px-6">
           {/* 상단 메인 타이틀 (관리시스템과 동일 스타일) */}
-          <h2 className="mb-20 mt-0 text-center text-3xl font-bold leading-tight text-gray-900 md:text-4xl">
+          <h2 className="motion-rise mb-20 mt-0 text-center text-3xl font-bold leading-tight text-gray-900 md:text-4xl">
             <span className="block">타협 없는 철저함으로 완성된 몰입의 공간</span>
             <span className="block">로드맵을 소개합니다</span>
           </h2>
