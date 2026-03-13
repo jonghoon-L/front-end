@@ -50,7 +50,7 @@ export default function AboutSystemPage() {
       >
         <div className="mx-auto w-full max-w-7xl">
           {/* 상단 메인 타이틀 (위·아래 간격 동일: 56px) */}
-          <h2 className="mb-20 mt-0 text-center text-3xl font-bold leading-tight text-gray-900 md:text-4xl">
+          <h2 className="motion-rise mb-20 mt-0 text-center text-3xl font-bold leading-tight text-gray-900 md:text-4xl">
             <span className="block">학습부터 생활, 멘탈 케어까지</span>
             <span className="block">로드맵의 다각적 관리 시스템을 경험해보세요</span>
           </h2>
@@ -59,10 +59,11 @@ export default function AboutSystemPage() {
           <div
             className="mx-auto grid max-w-[950px] grid-cols-1 gap-8 md:grid-cols-2 md:gap-10 lg:gap-12"
           >
-            {SYSTEM_CARDS.map((card) => (
+            {SYSTEM_CARDS.map((card, index) => (
               <article
                 key={card.number}
-                className="relative flex flex-col items-center rounded-2xl border border-slate-200 bg-white px-6 pb-8 pt-12 text-center shadow-sm transition-shadow hover:shadow-md"
+                className="motion-rise relative flex flex-col items-center rounded-2xl border border-slate-200 bg-white px-6 pb-8 pt-12 text-center shadow-sm transition-shadow hover:shadow-md"
+                style={{ animationDelay: `${180 + index * 150}ms` }}
               >
                 {/* 번호 뱃지 */}
                 <span className="absolute -top-4 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-white px-4 py-1 text-sm font-bold text-emerald-700 shadow-sm">
@@ -76,7 +77,7 @@ export default function AboutSystemPage() {
                   className="mb-6 h-24 w-24 object-contain md:h-28 md:w-28"
                 />
                 <h3
-                  className="mt-0 text-xl font-bold text-gray-900 md:text-2xl"
+                  className="mt-0 text-xl font-bold text-emerald-700 md:text-2xl"
                   dangerouslySetInnerHTML={{ __html: card.title }}
                 />
                 <p
@@ -88,7 +89,7 @@ export default function AboutSystemPage() {
           </div>
 
           {/* 안내 문구 CTA */}
-          <div className="mb-12 mt-44 text-center md:mt-52 md:mb-16">
+          <div className="motion-rise motion-delay-2 mb-12 mt-44 text-center md:mt-52 md:mb-16">
             <p className="text-lg font-medium text-gray-600 md:text-xl">더 자세한 관리시스템 정보는</p>
             <p className="mt-1 text-2xl font-extrabold text-gray-900 md:text-3xl">
               하단의 안내 책자 보기 버튼을 클릭해 확인해주세요
@@ -96,7 +97,7 @@ export default function AboutSystemPage() {
           </div>
 
           {/* 안내 책자 보기 버튼 (다크 테마 고급화, 새 창 열기) */}
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="motion-rise motion-delay-3 flex flex-wrap justify-center gap-4">
             <a
               href="https://heyzine.com/flip-book/451a350b6a.html"
               target="_blank"
