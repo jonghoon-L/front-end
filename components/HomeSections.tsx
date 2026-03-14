@@ -231,7 +231,11 @@ export default function HomeSections() {
               <div className="flex flex-[2] flex-col justify-center md:pl-6 md:pr-4">
                 <h3 className="text-2xl font-bold text-gray-900 md:text-3xl">N수생 전용관</h3>
                 <p className="mt-3 text-base text-gray-700 md:text-lg">N수생들을 위한 공간입니다</p>
-                <p className="mt-2 text-sm leading-relaxed text-gray-500">3월 오픈부터 수능 전날까지 변동 없이 운영되며, 08:30부터 21:50까지 의무학습으로 진행됩니다</p>
+                <p className="mt-2 text-sm leading-relaxed text-gray-500">
+                  3월 오픈부터 수능 전날까지 변동 없이 운영되며
+                  <br />
+                  08:30부터 21:50까지 의무학습으로 진행됩니다
+                </p>
               </div>
             </div>
           </div>
@@ -254,7 +258,11 @@ export default function HomeSections() {
               <div className="order-2 flex flex-[2] flex-col justify-center md:order-1 md:pl-4 md:pr-6">
                 <h3 className="text-2xl font-bold text-gray-900 md:text-3xl">고2·고3 전용관</h3>
                 <p className="mt-3 text-base text-gray-700 md:text-lg">고2·고3 현역 학생들을 위한 공간입니다</p>
-                <p className="mt-2 text-sm leading-relaxed text-gray-500">학기 중에는 하교 시간에 맞춰 16시부터 1시까지 운영되며, 방학기간에는 09:30부터 21:50까지 의무학습으로 진행됩니다</p>
+                <p className="mt-2 text-sm leading-relaxed text-gray-500">
+                  학기 중에는 하교 시간에 맞춰 16시부터 1시까지 운영되며
+                  <br />
+                  방학 기간에는 09:30부터 21:50까지 의무학습으로 진행됩니다
+                </p>
               </div>
               <div className="order-1 min-w-0 flex-[3] md:order-2">
                 <FadeSlider facilities={H_FACILITIES} initialDelayMs={SLIDER_INTERVAL_MS / 2} />

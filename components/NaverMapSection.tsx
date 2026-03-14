@@ -166,7 +166,7 @@ function NaverMapSection() {
               id="roadmap-naver-map"
               className="h-full w-full"
               role="img"
-              aria-label="로드맵 N수 전용관 및 고2·고3 전용관 위치 지도"
+              aria-label="로드맵 N수생 전용관 및 고2·고3 전용관 위치 지도"
             />
           )}
         </div>
@@ -188,9 +188,9 @@ function NaverMapSection() {
             </div>
           </div>
 
-          {/* N수 전용관 (오른쪽) */}
+          {/* N수생 전용관 (오른쪽) */}
           <div className="rounded-xl bg-white p-8 shadow-md">
-            <h3 className="mb-6 text-xl font-bold text-gray-900">N수 전용관</h3>
+            <h3 className="mb-6 text-xl font-bold text-gray-900">N수생 전용관</h3>
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-3">
                 <MapPin className="h-5 w-5 shrink-0 text-blue-400" />
