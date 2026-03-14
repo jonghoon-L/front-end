@@ -1,4 +1,4 @@
-﻿import PageHero from "@/components/PageHero";
+import PageHero from "@/components/PageHero";
 import Image from "next/image";
 
 export default function MentoringSongPage() {
@@ -11,7 +11,7 @@ export default function MentoringSongPage() {
         ]}
         crumbs={[
           { label: "1:1 멘토.플랜.학업관리" },
-          { label: "1:1 전담 관리T 송의준", href: "/mentoring/song" },
+          { label: "1:1 상담 관리 T 소개", href: "/mentoring/song" },
         ]}
       />
 

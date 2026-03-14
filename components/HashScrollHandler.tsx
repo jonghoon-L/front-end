@@ -15,7 +15,9 @@ function scrollToHash() {
 
   if (hash === "location") {
     const rect = el.getBoundingClientRect();
-    const targetY = window.scrollY + rect.top - HEADER_HEIGHT + LOCATION_SECTION_TOP_PADDING;
+    /** '로드맵 오시는 길' 제목이 화면 위로 숨겨지도록 약간 위로 스크롤 */
+    const TITLE_OFFSET = 110;
+    const targetY = window.scrollY + rect.top - HEADER_HEIGHT + LOCATION_SECTION_TOP_PADDING - TITLE_OFFSET;
     window.scrollTo({ top: Math.max(0, targetY), behavior: "smooth" });
   } else {
     el.scrollIntoView({ behavior: "smooth", block: "start" });

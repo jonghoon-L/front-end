@@ -60,8 +60,8 @@ const infoMenus: Menu[] = [
     href: '/mentoring/management',
     subMenus: [
       { label: '관리 내용', href: '/mentoring/management' },
-      { label: '1:1 전담 관리T 송의준', href: '/mentoring/song' },
-      { label: '기존 상담 자료 등록', href: '/mentoring/consulting-register' },
+      { label: '1:1 상담 관리 T 소개', href: '/mentoring/song' },
+      { label: '상담 자료', href: '/mentoring/consulting-register' },
       { label: '이용료', href: '/mentoring/price' },
     ],
   },
