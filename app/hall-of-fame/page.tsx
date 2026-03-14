@@ -5,7 +5,8 @@ export default function HallOfFamePage() {
   return (
     <main>
       <PageHero
-        imageUrl="/images/place/n/n_p8.jpg"
+        imageUrl="/images/place/hi/hi_p3.jpg"
+        heroStyle={{ backgroundPosition: "center 65%" }}
         lines={["로드맵은", "실적으로 증명합니다"]}
         crumbs={[{ label: "명예의 전당" }]}
       />
