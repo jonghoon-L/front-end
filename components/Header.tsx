@@ -71,7 +71,7 @@ const infoMenus: Menu[] = [
   },
   {
     label: '이용 후기',
-    href: '/reviews/register',
+    href: '/board/reviews',
   },
   {
     label: '게시판',

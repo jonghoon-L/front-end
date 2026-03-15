@@ -1,10 +1,64 @@
-﻿import Link from "next/link";
+"use client";
+
 import PageHero from "@/components/PageHero";
-import { studyPosts } from "./data";
+import { studyMaterials } from "./data";
+import { Download, FileText, FileSpreadsheet, FileImage, File, BookOpen } from "lucide-react";
+import { useState } from "react";
+
+function getFileExtension(url: string): string {
+  const match = url.match(/\.([a-zA-Z0-9]+)(?:\?|$)/);
+  return match ? match[1].toLowerCase() : "";
+}
+
+function FileTypeDisplay({ url, title }: { url: string; title: string }) {
+  const ext = getFileExtension(url);
+  const extLabel = ext ? `.${ext}` : "";
+  const fileName = extLabel ? `${title}${extLabel}` : title;
+
+  const iconMap: Record<string, { icon: typeof FileText; color: string }> = {
+    pdf: { icon: FileText, color: "text-red-600" },
+    doc: { icon: FileText, color: "text-blue-600" },
+    docx: { icon: FileText, color: "text-blue-600" },
+    ppt: { icon: FileText, color: "text-orange-600" },
+    pptx: { icon: FileText, color: "text-orange-600" },
+    xls: { icon: FileSpreadsheet, color: "text-green-600" },
+    xlsx: { icon: FileSpreadsheet, color: "text-green-600" },
+    jpg: { icon: FileImage, color: "text-amber-500" },
+    jpeg: { icon: FileImage, color: "text-amber-500" },
+    png: { icon: FileImage, color: "text-sky-500" },
+    gif: { icon: FileImage, color: "text-pink-500" },
+    hwp: { icon: FileText, color: "text-blue-500" },
+    txt: { icon: FileText, color: "text-gray-600" },
+  };
+
+  const { icon: Icon, color } = iconMap[ext] ?? { icon: File, color: "text-gray-500" };
+
+  return (
+    <span className="inline-flex items-center gap-2">
+      <Icon className={`h-5 w-5 shrink-0 ${color}`} aria-hidden />
+      <span className="font-medium text-slate-800">{fileName}</span>
+    </span>
+  );
+}
 
 export default function StudyMaterialsPage() {
+  const [downloadCounts, setDownloadCounts] = useState<Record<number, number>>(
+    () =>
+      Object.fromEntries(
+        studyMaterials.map((m) => [m.id, m.downloadCount])
+      ) as Record<number, number>
+  );
+
+  const handleDownload = (item: (typeof studyMaterials)[0]) => {
+    setDownloadCounts((prev) => ({
+      ...prev,
+      [item.id]: (prev[item.id] ?? item.downloadCount) + 1,
+    }));
+    window.open(item.downloadUrl, "_blank", "noopener,noreferrer");
+  };
+
   return (
-    <main className="bg-[#f5f5f5]">
+    <main className="min-h-screen overflow-x-hidden bg-slate-50">
       <PageHero
         imageUrl=""
         lines={["학업자료"]}
@@ -12,51 +66,112 @@ export default function StudyMaterialsPage() {
           { label: "게시판" },
           { label: "학업자료", href: "/board/study-materials" },
         ]}
-        heightClass="h-[220px] lg:h-[260px]"
-        heroClassName="bg-gradient-to-r from-[#e9e9e9] to-[#f2f2f2]"
-        overlayClassName="opacity-70"
-        overlayStyle={{
-          background:
-            "linear-gradient(120deg, transparent 28%, rgba(255,255,255,0.75) 28%, rgba(255,255,255,0.75) 33%, transparent 33%, transparent 42%, rgba(255,255,255,0.5) 42%, rgba(255,255,255,0.5) 47%, transparent 47%)",
-        }}
-        titleClassName="text-[#1f2937] text-3xl lg:text-4xl"
-        breadcrumbWrapClassName="border-gray-300"
+        heightClass="h-[200px] lg:h-[240px]"
+        heroClassName="bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800"
+        overlayClassName="opacity-0"
+        titleClassName="text-white text-2xl lg:text-3xl font-bold tracking-tight"
+        breadcrumbWrapClassName="border-slate-200 bg-white"
       />
 
-      <section className="mx-auto max-w-6xl px-6 py-16 lg:py-20">
-        <div className="mt-16 overflow-x-auto">
-          <table className="w-full min-w-[760px] border-t-2 border-gray-900 bg-transparent text-left">
-            <thead>
-              <tr className="border-b border-gray-300 text-[#1f2937]">
-                <th className="px-10 py-5 text-base font-semibold">번호</th>
-                <th className="px-6 py-5 text-base font-semibold">제목</th>
-                <th className="px-6 py-5 text-base font-semibold">작성자</th>
-                <th className="px-6 py-5 text-base font-semibold">작성일</th>
-                <th className="px-6 py-5 text-base font-semibold">조회</th>
-              </tr>
-            </thead>
-            <tbody>
-              {studyPosts.map((post) => (
-                <tr key={post.id} className="border-b border-gray-300 text-base text-[#111827]">
-                  <td className="px-10 py-5">
-                    <span className="mr-4 font-semibold">{post.category}</span>
-                    <span>{post.id}</span>
-                  </td>
-                  <td className="px-6 py-5 font-semibold">
-                    <Link
-                      href={`/board/study-materials/${post.id}`}
-                      className="hover:text-black/70 hover:underline"
+      <section className="mx-auto max-w-5xl px-4 sm:px-6 py-10 lg:py-14">
+        {/* 인트로 */}
+        <div className="mb-8 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+            <BookOpen className="h-5 w-5" strokeWidth={2} />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-slate-800">학습 자료 다운로드</h2>
+            <p className="text-sm text-slate-500">수능 준비에 필요한 자료를 무료로 받아보세요.</p>
+          </div>
+        </div>
+
+        {/* 모바일·태블릿: 카드 리스트 */}
+        <div className="lg:hidden space-y-3">
+          {studyMaterials.map((item, index) => (
+            <div
+              key={item.id}
+              className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200/60"
+            >
+              <div className="flex items-start gap-4">
+                <div className="min-w-0 flex-1">
+                  <span className="mb-2 inline-block text-xs font-medium text-slate-400">
+                    #{index + 1}
+                  </span>
+                  <div className="mb-4">
+                    <FileTypeDisplay url={item.downloadUrl} title={item.title} />
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs text-slate-500">
+                      다운로드 {downloadCounts[item.id] ?? item.downloadCount}회
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleDownload(item)}
+                      className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all active:scale-[0.98] hover:bg-emerald-500"
+                      aria-label={`${item.title} 다운로드`}
                     >
-                      {post.title}
-                    </Link>
-                  </td>
-                  <td className="px-6 py-5">{post.author}</td>
-                  <td className="px-6 py-5">{post.createdAt}</td>
-                  <td className="px-6 py-5">{post.views}</td>
+                      <Download className="h-4 w-4" />
+                      다운로드
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* 데스크톱: 테이블 */}
+        <div className="hidden lg:block overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/60">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-slate-100 bg-slate-50/80">
+                  <th className="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    순번
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    자료 제목
+                  </th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    다운로드
+                  </th>
+                  <th className="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    다운로드 횟수
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {studyMaterials.map((item, index) => (
+                  <tr
+                    key={item.id}
+                    className="group transition-colors hover:bg-slate-50/70"
+                  >
+                    <td className="px-6 py-4 text-center text-sm font-medium text-slate-400">
+                      {index + 1}
+                    </td>
+                    <td className="px-6 py-4">
+                      <FileTypeDisplay url={item.downloadUrl} title={item.title} />
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex justify-center">
+                        <button
+                          type="button"
+                          onClick={() => handleDownload(item)}
+                          className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2 text-slate-600 shadow-sm transition-all hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700"
+                          aria-label={`${item.title} 다운로드`}
+                        >
+                          <Download className="h-4 w-4" aria-hidden />
+                        </button>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-center text-sm text-slate-500">
+                      {downloadCounts[item.id] ?? item.downloadCount}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
     </main>
