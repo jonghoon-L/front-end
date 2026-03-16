@@ -5,7 +5,8 @@ export default function High2High3PricePage() {
   return (
     <main>
       <PageHero
-        imageUrl="/images/place/hi/hi_p14.jpg"
+        imageUrl="/images/place/n/n_p17.jpg"
+        heroStyle={{ backgroundPosition: "center 60%" }}
         lines={["로드맵 고2·고3 전용관", "이용료 및 환불 규정 안내"]}
         crumbs={[
           { label: "로드맵 고2·고3 전용관" },

@@ -5,8 +5,8 @@ export default function NStudentPricePage() {
   return (
     <main>
       <PageHero
-        imageUrl="/images/place/n/n_p5.jpg"
-        heroStyle={{ backgroundPosition: "center 48%" }}
+        imageUrl="/images/place/n/n_p17.jpg"
+        heroStyle={{ backgroundPosition: "center 60%" }}
         lines={["로드맵 N수생 전용관", "이용료 및 환불 규정 안내"]}
         crumbs={[
           { label: "로드맵 N수생 전용관" },

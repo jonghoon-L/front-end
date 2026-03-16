@@ -74,7 +74,8 @@ export default function AboutDiffPage() {
   return (
     <main>
       <PageHero
-        imageUrl="/images/place/n/n_p9.jpg"
+        imageUrl="/images/place/n/n_p12.jpg"
+        heroStyle={{ backgroundPosition: "center 60%" }}
         lines={[
           "로드맵은",
           "일반 관리형 독서실과 다릅니다",

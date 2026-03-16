@@ -4,10 +4,11 @@ export default function MentoringManagementPage() {
   return (
     <main>
       <PageHero
-        imageUrl="/images/place/n/n_p5.jpg"
-        lines={["1:1 멘토.플랜.학업관리", "관리 내용"]}
+        imageUrl="/images/place/n/n_p21.jpg"
+        heroStyle={{ backgroundPosition: "center 50%" }}
+        lines={["1:1 멘토·플랜·학업관리", "관리 내용"]}
         crumbs={[
-          { label: "1:1 멘토.플랜.학업관리", href: "/mentoring/management" },
+          { label: "1:1 멘토·플랜·학업관리", href: "/mentoring/management" },
           { label: "관리 내용" },
         ]}
       />

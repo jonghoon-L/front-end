@@ -3,10 +3,15 @@
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import NaverMapSection from "@/components/NaverMapSection";
-const N_FACILITIES = Array.from({ length: 6 }, (_, i) => ({
-  name: `N수관 시설 ${i + 1}`,
-  image: `/images/place/n/n_p${i + 1}.jpg`,
-}));
+const N_FACILITIES = [
+  { name: "N수관 시설 1", image: "/images/place/n/n_p2.jpg" },
+  { name: "N수관 시설 2", image: "/images/place/n/n_p10.jpg" },
+  { name: "N수관 시설 3", image: "/images/place/n/n_p19.jpg" },
+  { name: "N수관 시설 4", image: "/images/place/n/n_p20.jpg" },
+  { name: "N수관 시설 5", image: "/images/place/n/n_p12.jpg" },
+  { name: "N수관 시설 6", image: "/images/place/n/n_p18.jpg" },
+  { name: "N수관 시설 7", image: "/images/place/n/n_p21.jpg" },
+];
 
 const H_FACILITIES = [
   { name: "하이엔드관 시설 1", image: "/images/place/hi/hi_p2.jpg" },

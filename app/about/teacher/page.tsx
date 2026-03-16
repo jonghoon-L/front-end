@@ -46,8 +46,8 @@ export default function AboutTeacherPage() {
   return (
     <main>
       <PageHero
-        imageUrl="/images/place/n/n_p4.jpg"
-        heroStyle={{ backgroundPosition: "center 60%", backgroundSize: "100% auto" }}
+        imageUrl="/images/place/n/n_p22.jpg"
+        heroStyle={{ backgroundPosition: "75% 47%", backgroundSize: "cover" }}
         lines={["로드맵의", "관리 T를 소개합니다"]}
         crumbs={[
           { label: "ABOUT 로드맵" },

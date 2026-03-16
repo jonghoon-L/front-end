@@ -4,10 +4,11 @@ export default function ConsultingRegisterPage() {
   return (
     <main>
       <PageHero
-        imageUrl="/images/place/n/n_p5.jpg"
-        lines={["1:1 멘토.플랜.학업관리", "상담 자료"]}
+        imageUrl="/images/place/hi/hi_p9.jpg"
+        heroStyle={{ backgroundPosition: "center 60%" }}
+        lines={["1:1 멘토·플랜·학업관리", "상담 자료"]}
         crumbs={[
-          { label: "1:1 멘토.플랜.학업관리", href: "/mentoring/management" },
+          { label: "1:1 멘토·플랜·학업관리", href: "/mentoring/management" },
           { label: "상담 자료" },
         ]}
       />

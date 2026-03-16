@@ -4,7 +4,8 @@ export default function NStudentMockTestPage() {
   return (
     <main>
       <PageHero
-        imageUrl="/images/place/n/n_p9.jpg"
+        imageUrl="/images/place/n/n_p18.jpg"
+        heroStyle={{ backgroundPosition: "center 80%" }}
         lines={["로드맵 N수생 전용관", "교육청 + 더프 모의고사"]}
         crumbs={[
           { label: "로드맵 N수생 전용관" },
