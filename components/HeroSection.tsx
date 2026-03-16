@@ -6,8 +6,8 @@ export default function HeroSection() {
   return (
     <section
       style={{
-        height: "calc(100vh - 80px)",
-        minHeight: "calc(100vh - 80px)",
+        height: "calc(100vh - 64px)",
+        minHeight: "calc(100vh - 64px)",
         position: "relative",
         overflow: "hidden",
       }}

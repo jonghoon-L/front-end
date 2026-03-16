@@ -94,7 +94,7 @@ export default function Header() {
         'sticky top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 text-gray-900',
       ].join(' ')}
     >
-      <div className="mx-auto w-full max-w-[1600px] px-6 lg:px-12 py-3 flex items-center justify-between gap-6">
+      <div className="mx-auto w-full max-w-[1600px] px-6 lg:px-12 py-2 flex items-center justify-between gap-6">
         {/* [좌측] 로고 */}
         <Link
           href="/"
@@ -106,7 +106,7 @@ export default function Header() {
             alt="로드맵"
             width={196}
             height={56}
-            className="h-14 w-auto"
+            className="h-12 w-auto"
             priority
           />
           <div className="flex flex-col mt-1.5">
@@ -139,9 +139,9 @@ export default function Header() {
                   className="absolute left-1/2 -translate-x-1/2 hidden group-hover:block z-50"
                   style={{ top: '100%' }}
                 >
-                  <div className="pt-5">
+                  <div className="pt-0">
                     <div
-                      className="min-w-[200px] bg-white flex flex-col overflow-hidden"
+                      className="min-w-[200px] bg-white flex flex-col overflow-hidden pt-4"
                       style={{
                         boxShadow: '0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -1px rgba(0,0,0,0.06)',
                       }}

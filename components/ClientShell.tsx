@@ -30,7 +30,7 @@ export default function ClientShell({
       <Header />
       <div
         key={pathname}
-        className={`client-shell-content flex-1 pt-0 -mt-px scroll-pt-20 animate-[page-fade-in_0.5s_ease-out] ${pathname === "/" ? "pb-0" : "pb-12 md:pb-24"}`}
+        className={`client-shell-content flex-1 pt-0 -mt-4 scroll-pt-16 animate-[page-fade-in_0.5s_ease-out] ${pathname === "/" ? "pb-0" : "pb-12 md:pb-24"}`}
       >
         {children}
       </div>

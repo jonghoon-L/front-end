@@ -5,7 +5,7 @@ export default function MentoringManagementPage() {
     <main>
       <PageHero
         imageUrl="/images/place/n/n_p21.jpg"
-        heroStyle={{ backgroundPosition: "center 50%" }}
+        heroStyle={{ backgroundPosition: "center 55%" }}
         lines={["1:1 멘토·플랜·학업관리", "관리 내용"]}
         crumbs={[
           { label: "1:1 멘토·플랜·학업관리", href: "/mentoring/management" },

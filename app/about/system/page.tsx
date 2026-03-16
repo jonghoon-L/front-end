@@ -88,8 +88,23 @@ export default function AboutSystemPage() {
             ))}
           </div>
 
+          {/* 운영 규정 섹션 */}
+          <div className="motion-rise motion-delay-2 mx-auto mb-12 mt-44 max-w-4xl md:mb-16 md:mt-52">
+            <h2 className="mb-6 mt-0 text-center text-3xl font-bold leading-tight text-gray-900 md:text-4xl">
+              <span className="block">최고의 학습 분위기 조성을 위해</span>
+              <span className="block">다음과 같은 규정으로 운영됩니다</span>
+            </h2>
+            <Image
+              src="/images/system.png"
+              alt="로드맵 운영 규정"
+              width={1200}
+              height={1600}
+              className="h-auto w-full"
+            />
+          </div>
+
           {/* 안내 문구 CTA */}
-          <div className="motion-rise motion-delay-2 mb-12 mt-44 text-center md:mt-52 md:mb-16">
+          <div className="motion-rise motion-delay-2 mb-12 mt-24 text-center md:mt-28 md:mb-16">
             <p className="text-lg font-medium text-gray-600 md:text-xl">더 자세한 관리시스템 정보는</p>
             <p className="mt-1 text-2xl font-extrabold text-gray-900 md:text-3xl">
               하단의 안내 책자 보기 버튼을 클릭해 확인해주세요
