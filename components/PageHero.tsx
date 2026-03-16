@@ -30,7 +30,7 @@ export default function PageHero({
   heroStyle,
   overlayClassName = "bg-black/45",
   overlayStyle,
-  titleClassName = "text-white text-xl md:text-2xl lg:text-3xl",
+  titleClassName = "text-white text-xl md:text-2xl lg:text-4xl",
   breadcrumbWrapClassName = "border-gray-200",
 }: PageHeroProps) {
   const baseHeroStyle: CSSProperties = imageUrl

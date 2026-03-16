@@ -69,7 +69,7 @@ export default function StudyMaterialsPage() {
         heightClass="h-[200px] lg:h-[240px]"
         heroClassName="bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800"
         overlayClassName="opacity-0"
-        titleClassName="text-white text-xl lg:text-3xl font-bold tracking-tight"
+        titleClassName="text-white text-xl lg:text-4xl font-bold tracking-tight"
         breadcrumbWrapClassName="border-slate-200 bg-white"
       />
 
