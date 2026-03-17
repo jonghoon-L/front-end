@@ -63,7 +63,7 @@ export default function AboutTeacherPage() {
           {/* 상단 메인 타이틀 (관리시스템과 동일 스타일) */}
           <h2 className="motion-rise mb-20 mt-0 text-center text-3xl font-bold leading-tight text-gray-900 md:text-4xl">
             <span className="block">목표를 현실로 바꿔주는</span>
-            <span className="block">로드맵의 관리 선생님들을 소개합니다</span>
+            <span className="block">관리 선생님들을 소개합니다</span>
           </h2>
 
           <div className="mx-auto max-w-4xl space-y-8">

@@ -120,7 +120,7 @@ export default function High2High3FacilityPage() {
             <button
               type="button"
               onClick={goPrev}
-              className="absolute left-0 top-1/2 -translate-y-1/2 bg-black/75 px-4 py-5 text-3xl leading-none text-white transition hover:bg-black"
+              className="absolute left-0 top-1/2 -translate-y-1/2 cursor-pointer bg-black/75 px-4 py-5 text-3xl leading-none text-white transition hover:bg-black"
               aria-label="이전 시설 사진"
             >
               ‹
@@ -128,7 +128,7 @@ export default function High2High3FacilityPage() {
             <button
               type="button"
               onClick={goNext}
-              className="absolute right-0 top-1/2 -translate-y-1/2 bg-black/75 px-4 py-5 text-3xl leading-none text-white transition hover:bg-black"
+              className="absolute right-0 top-1/2 -translate-y-1/2 cursor-pointer bg-black/75 px-4 py-5 text-3xl leading-none text-white transition hover:bg-black"
               aria-label="다음 시설 사진"
             >
               ›
