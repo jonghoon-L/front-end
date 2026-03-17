@@ -341,7 +341,7 @@ export default function ConsultingPage() {
               </div>
             )}
             {/* 캘린더 */}
-            <div className="border border-gray-200 rounded-xl p-5 mb-4">
+            <div className="border border-gray-200 rounded-none p-5 mb-4">
               <div className="flex items-center justify-between mb-4">
                 <button
                   type="button"
@@ -424,7 +424,7 @@ export default function ConsultingPage() {
             )}
 
             {selectedDate && hasSlots && (
-              <div className="rounded-2xl border border-gray-200 p-5">
+              <div className="rounded-none border border-gray-200 p-5">
                 <div className="space-y-5">
                   <div>
                     <p className="text-base font-semibold text-gray-800 mb-2">오전</p>
