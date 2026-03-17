@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import ConsultationCalendar from "@/components/ConsultationCalendar";
 
 type Branch = "N" | "Hi-end";
 
@@ -121,32 +122,6 @@ function formatDateForInput(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-function getCalendarDays(year: number, month: number) {
-  const first = new Date(year, month, 1);
-  const last = new Date(year, month + 1, 0);
-  const startPad = first.getDay();
-  const daysInMonth = last.getDate();
-  const prevMonth = new Date(year, month, 0);
-  const prevDays = prevMonth.getDate();
-
-  const days: { date: Date; isCurrentMonth: boolean; dateStr: string }[] = [];
-
-  for (let i = startPad - 1; i >= 0; i--) {
-    const d = new Date(year, month - 1, prevDays - i);
-    days.push({ date: d, isCurrentMonth: false, dateStr: formatDateForInput(d) });
-  }
-  for (let i = 1; i <= daysInMonth; i++) {
-    const d = new Date(year, month, i);
-    days.push({ date: d, isCurrentMonth: true, dateStr: formatDateForInput(d) });
-  }
-  const rest = 42 - days.length;
-  for (let i = 1; i <= rest; i++) {
-    const d = new Date(year, month + 1, i);
-    days.push({ date: d, isCurrentMonth: false, dateStr: formatDateForInput(d) });
-  }
-  return days;
-}
-
 function toYearMonth(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -200,11 +175,6 @@ export default function ConsultingPage() {
     };
   }, [branch, yearMonth]);
 
-  const calendarDays = useMemo(
-    () => getCalendarDays(calendarMonth.getFullYear(), calendarMonth.getMonth()),
-    [calendarMonth]
-  );
-
   const MOCK_TIMES = ["10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00"];
 
   const availableTimesForDate = useMemo(() => {
@@ -218,13 +188,8 @@ export default function ConsultingPage() {
 
   const hasSlots = selectedDate && availableTimesForDate.length > 0;
 
-  const handlePrevMonth = () => {
-    setCalendarMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1));
-    setSelectedDate(null);
-    setSelectedTime(null);
-  };
-  const handleNextMonth = () => {
-    setCalendarMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1));
+  const handleMonthChange = (date: Date) => {
+    setCalendarMonth(date);
     setSelectedDate(null);
     setSelectedTime(null);
   };
@@ -341,66 +306,17 @@ export default function ConsultingPage() {
               </div>
             )}
             {/* 캘린더 */}
-            <div className="border border-gray-200 rounded-none p-5 mb-4">
-              <div className="flex items-center justify-between mb-4">
-                <button
-                  type="button"
-                  onClick={handlePrevMonth}
-                  className="cursor-pointer p-3 rounded-lg hover:bg-gray-100 text-gray-600"
-                  aria-label="이전 달"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <span className="text-base font-medium text-gray-900">
-                  {calendarMonth.getFullYear()}년 {calendarMonth.getMonth() + 1}월
-                </span>
-                <button
-                  type="button"
-                  onClick={handleNextMonth}
-                  className="cursor-pointer p-3 rounded-lg hover:bg-gray-100 text-gray-600"
-                  aria-label="다음 달"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
-              <div className="grid grid-cols-7 gap-1 text-center text-sm text-gray-500 mb-2">
-                {["일", "월", "화", "수", "목", "금", "토"].map((w, i) => (
-                  <span key={w} className={i === 0 ? "text-red-500" : ""}>
-                    {w}
-                  </span>
-                ))}
-              </div>
-              <div className="grid grid-cols-7 gap-2">
-                {calendarDays.map(({ date, isCurrentMonth, dateStr }) => {
-                  const isSelected = selectedDate === dateStr;
-                  const isPast = dateStr < todayStr;
-                  const isSunday = date.getDay() === 0;
-                  const disabled = isPast;
-                  return (
-                    <button
-                      key={dateStr}
-                      type="button"
-                      disabled={disabled}
-                      onClick={() => {
-                        if (disabled) return;
-                        setSelectedDate(dateStr);
-                        setSelectedTime(null);
-                      }}
-                      className={`aspect-square min-w-[2.5rem] w-full max-w-12 flex items-center justify-center rounded-full text-base transition-colors ${
-                        !isCurrentMonth ? "text-gray-300" : isSunday ? "text-red-500" : "text-gray-900"
-                      } ${disabled || !isCurrentMonth ? "cursor-default" : "cursor-pointer hover:bg-gray-100"} ${
-                        disabled ? "opacity-50" : ""
-                      } ${isSelected ? "bg-slate-800 text-white hover:bg-slate-700" : ""}`}
-                    >
-                      {date.getDate()}
-                    </button>
-                  );
-                })}
-              </div>
+            <div className="mb-4">
+              <ConsultationCalendar
+                calendarMonth={calendarMonth}
+                selectedDate={selectedDate}
+                onMonthChange={handleMonthChange}
+                onDateSelect={(dateStr) => {
+                  setSelectedDate(dateStr);
+                  setSelectedTime(null);
+                }}
+                disablePastDates={true}
+              />
             </div>
 
             {selectedDate && !hasSlots && (

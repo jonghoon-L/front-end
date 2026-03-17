@@ -67,19 +67,18 @@ const STATUS_STYLES: Record<
 };
 
 const DUMMY_DATA: WaitlistItem[] = [
-  { id: 1, name: "이종훈", age: 27, phone: "010-1234-5678", appliedAt: "2025-02-20", status: "WAITING", season: "SEMESTER_1", branch: "N" },
-  { id: 2, name: "백소미", age: 26, phone: "010-2345-6789", appliedAt: "2025-02-21", status: "CONTACTED", season: "SEMESTER_1", branch: "N" },
-  { id: 3, name: "김은형", age: 27, phone: "010-3456-7890", appliedAt: "2025-02-22", status: "REGISTERED", season: "SEMESTER_1", branch: "N" },
-  { id: 4, name: "이채영", age: 24, phone: "010-4567-8901", appliedAt: "2025-02-23", status: "WAITING", season: "SEMESTER_1", branch: "N" },
-  { id: 5, name: "김준업", age: 28, phone: "010-5678-9012", appliedAt: "2025-02-24", status: "CANCELED", season: "SEMESTER_1", branch: "Hi-end" },
-  { id: 6, name: "강희수", age: 27, phone: "010-6789-0123", appliedAt: "2025-02-25", status: "CONTACTED", season: "SEMESTER_2", branch: "N" },
-  { id: 7, name: "양지원", age: 26, phone: "010-7890-1234", appliedAt: "2025-02-25", status: "WAITING", season: "SEMESTER_2", branch: "Hi-end" },
-  { id: 8, name: "안보석", age: 26, phone: "010-8901-2345", appliedAt: "2025-02-26", status: "REGISTERED", season: "SEMESTER_2", branch: "Hi-end" },
-  { id: 9, name: "문준석", age: 28, phone: "010-9012-3456", appliedAt: "2025-02-27", status: "WAITING", season: "SUMMER", branch: null },
-  { id: 10, name: "김지효", age: 30, phone: "010-0123-4567", appliedAt: "2025-02-27", status: "CONTACTED", season: "SUMMER", branch: null },
-  { id: 11, name: "윤도현", age: 27, phone: "010-1111-2222", appliedAt: "2025-02-28", status: "WAITING", season: "SUMMER", branch: null },
-  { id: 12, name: "조한솔", age: 28, phone: "010-3333-4444", appliedAt: "2025-02-28", status: "REGISTERED", season: "WINTER", branch: null },
-  { id: 13, name: "원민경", age: 27, phone: "010-5555-6666", appliedAt: "2025-02-28", status: "WAITING", season: "WINTER", branch: null },
+  { id: 1, name: "이종훈", age: 19, phone: "010-1234-5678", appliedAt: "2025-02-20", status: "WAITING", season: "SEMESTER_1", branch: "N" },
+  { id: 2, name: "강찬", age: 20, phone: "010-2345-6789", appliedAt: "2025-02-21", status: "CONTACTED", season: "SEMESTER_1", branch: "N" },
+  { id: 3, name: "구희원", age: 18, phone: "010-3456-7890", appliedAt: "2025-02-22", status: "REGISTERED", season: "SEMESTER_1", branch: "N" },
+  { id: 4, name: "김나경", age: 21, phone: "010-4567-8901", appliedAt: "2025-02-23", status: "WAITING", season: "SEMESTER_1", branch: "N" },
+  { id: 5, name: "김동호", age: 19, phone: "010-5678-9012", appliedAt: "2025-02-24", status: "CANCELED", season: "SEMESTER_1", branch: "Hi-end" },
+  { id: 6, name: "김정범", age: 20, phone: "010-6789-0123", appliedAt: "2025-02-25", status: "CONTACTED", season: "SEMESTER_2", branch: "N" },
+  { id: 8, name: "모정원", age: 18, phone: "010-8901-2345", appliedAt: "2025-02-26", status: "REGISTERED", season: "SEMESTER_2", branch: "Hi-end" },
+  { id: 9, name: "박예은", age: 21, phone: "010-9012-3456", appliedAt: "2025-02-27", status: "WAITING", season: "SUMMER", branch: null },
+  { id: 10, name: "박인서", age: 19, phone: "010-0123-4567", appliedAt: "2025-02-27", status: "CONTACTED", season: "SUMMER", branch: null },
+  { id: 11, name: "박희원", age: 20, phone: "010-1111-2222", appliedAt: "2025-02-28", status: "WAITING", season: "SUMMER", branch: null },
+  { id: 12, name: "이하린", age: 18, phone: "010-3333-4444", appliedAt: "2025-02-28", status: "REGISTERED", season: "WINTER", branch: null },
+  { id: 13, name: "황예원", age: 21, phone: "010-5555-6666", appliedAt: "2025-02-28", status: "WAITING", season: "WINTER", branch: null },
 ];
 
 export default function WaitlistsPage() {
@@ -145,7 +144,7 @@ export default function WaitlistsPage() {
               transition-all duration-200 ease-out
               ${
                 activeTab === tab.id
-                  ? "bg-blue-600 text-white shadow-sm"
+                  ? "bg-slate-800 text-white shadow-sm"
                   : "text-slate-600 hover:bg-slate-200/70 hover:text-slate-800"
               }
             `}

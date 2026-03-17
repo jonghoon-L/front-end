@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Calendar, Users, MessageSquare } from "lucide-react";
-import MemoCanvas from "../components/MemoCanvas";
 
 const adminMenuCards = [
   {
@@ -22,7 +21,13 @@ const adminMenuCards = [
   {
     href: "/admin/reviews",
     label: "이용 후기 관리",
-    description: "사이트를 통해 작성한 후기들의 승인 상태를 관리하고 우수 후기를 지정합니다.",
+    description: (
+      <>
+        사이트를 통해 작성한 후기들의 승인 상태를 관리하고
+        <br />
+        우수 후기를 지정합니다.
+      </>
+    ),
     Icon: MessageSquare,
     iconColor: "text-blue-500",
     iconBgColor: "bg-blue-50",
@@ -67,8 +72,6 @@ export default function AdminDashboardPage() {
           );
         })}
       </div>
-
-      <MemoCanvas />
     </div>
   );
 }

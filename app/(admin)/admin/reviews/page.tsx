@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Star, X, MessageSquare } from "lucide-react";
+import { reviewPosts } from "@/app/board/reviews/data";
 
 type ReviewItem = {
   id: number;
@@ -14,28 +15,18 @@ type ReviewItem = {
   imageUrls?: string[];
 };
 
-const LONG_REVIEW_CONTENT = `선생님들이 친절하고 설명도 잘 해주셔서 수능 준비에 큰 도움이 되었습니다. 특히 영어 과목 수업이 인상적이었고, 실전 문제 풀이가 많이 도움됐어요.
-
-저는 고3 재수생인데, 수능 D-200부터 이곳에서 공부를 시작했습니다. 처음에는 학원과 독서실을 여러 곳 알아봤는데, 이곳의 시설과 분위기가 가장 마음에 들어서 등록했어요. 스터디룸이 넓고 쾌적한데다 조용해서 집중이 정말 잘 됐습니다.
-
-영어 선생님께서는 매 수업마다 핵심 문법과 구문을 체계적으로 정리해주셨고, 모의고사 풀이 후에는 개별 첨삭까지 해주셔서 제 실력이 눈에 띄게 늘었어요. 수학도 기초부터 다시 다져주셔서 수능 때 1등급을 받을 수 있었습니다.
-
-관리 선생님들도 정말 친절하십니다. 피로할 때마다 격려해주시고, 진로 상담이나 대학 정보도 알려주셔서 감사했어요. 야간에도 늦게까지 공부하는 학생들을 위해 음료 자판기와 간식도 준비해두셨더라구요.
-
-결과적으로 수능에서 목표했던 성적을 받을 수 있었고, 지금은 제가 원하던 대학에 합격했습니다. 다음 학기에도 동생을 여기로 보낼 생각이에요. 정말 감사했습니다!`;
-
-const DUMMY_REVIEWS: ReviewItem[] = [
-  { id: 1, title: "수업 품질이 정말 좋았어요", author: "이종훈", content: LONG_REVIEW_CONTENT, createdAt: "2025-02-20", isApproved: true, isExcellent: true, imageUrls: ["https://picsum.photos/600/400"] },
-  { id: 2, title: "분위기가 좋아서 집중이 잘 돼요", author: "백소미", content: "스터디룸이 넓고 쾌적해서 공부하기 딱 좋습니다. 조용한 환경에서 혼자 공부할 수 있어서 효율이 많이 올랐어요. 화장실이나 음수대도 가까워서 편했습니다.", createdAt: "2025-02-21", isApproved: true, isExcellent: false },
-  { id: 3, title: "강추합니다!", author: "김은형", content: "친구 추천으로 왔는데 생각보다 훨씬 좋았어요. 관리 선생님께서 수시로 체크해주시고, 진로 상담도 받을 수 있어서 좋았습니다. 수능 D-100부터 여기서 공부했는데 성적이 많이 올랐어요.", createdAt: "2025-02-22", isApproved: true, isExcellent: true },
-  { id: 4, title: "시설이 깔끔하고 관리가 잘 돼요", author: "이채영", content: "매일 청소해주시고, 책상과 의자 상태도 좋습니다. 콘센트가 넉넉해서 노트북이나 태블릿 사용하기 편해요. 조명도 적당해서 눈이 편합니다.", createdAt: "2025-02-23", isApproved: false, isExcellent: false },
-  { id: 5, title: "가격 대비 만족도 높아요", author: "김준업", content: "다른 학원이나 스터디카페랑 비교해봤을 때 가격 대비 시설과 서비스가 괜찮은 편이에요. 월 이용권도 있고 일일권도 있어서 유연하게 이용할 수 있어서 좋습니다.", createdAt: "2025-02-24", isApproved: true, isExcellent: false },
-  { id: 6, title: "재수생에게 추천", author: "강희수", content: "재수하면서 이곳에서 공부했는데 분위기가 딱 맞았어요. 같이 공부하는 친구들도 많아서 동기부여가 되고, 선생님들도 항상 격려해주셔서 힘든 시기 잘 버틸 수 있었습니다.", createdAt: "2025-02-25", isApproved: true, isExcellent: true },
-  { id: 7, title: "조용한 환경에서 집중 잘 됐어요", author: "양지원", content: "낮에는 학생들이 많지만 규칙이 잘 지켜져서 조용합니다. 야간에는 더 한적해서 새벽까지 공부할 수 있어요. 24시간 운영이 편리합니다.", createdAt: "2025-02-26", isApproved: true, isExcellent: false },
-  { id: 8, title: "시설 신축이라 깔끔합니다", author: "안보석", content: "건물이 새로 지어져서 모든 것이 새롭습니다. 에어컨, 난방 모두 잘 되고 화장실도 넓어요. 주차 공간도 넉넉해서 차 끌고 오기 좋습니다.", createdAt: "2025-02-26", isApproved: false, isExcellent: false },
-  { id: 9, title: "진로 상담 서비스가 훌륭해요", author: "문준석", content: "단순히 자습만 하는 게 아니라 진로 상담이나 학습 방법에 대한 조언을 받을 수 있어서 좋았어요. 대입 준비하는 학생들에게 정말 유용할 것 같습니다.", createdAt: "2025-02-27", isApproved: true, isExcellent: true },
-  { id: 10, title: "친구들과 함께 스터디하기 좋아요", author: "김지효", content: "소규모 스터디룸이 있어서 친구들과 모여서 공부하기 딱 좋습니다. 그룹 스터디 신청하면 방을 따로 쓸 수 있어서 편했어요. 시험 기간에 활용했습니다.", createdAt: "2025-02-28", isApproved: true, isExcellent: false },
-];
+const DUMMY_REVIEWS: ReviewItem[] = reviewPosts
+  .map((post) => ({
+    id: post.id,
+    title: post.title,
+    author: post.author,
+    content: post.content.join("\n\n"),
+    createdAt: post.createdAt,
+    isApproved: true,
+    isExcellent: !!post.isTop,
+    imageUrls: post.imageUrls,
+  }))
+  .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
 function ToggleSwitch({
   checked,
