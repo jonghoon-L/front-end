@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import PageHero from "@/components/PageHero";
-import BranchBadge from "../BranchBadge";
 import { Trash2 } from "lucide-react";
 import { useFadeIn } from "@/hooks/useFadeIn";
 
@@ -11,7 +10,6 @@ type ReviewStatus = "PENDING" | "APPROVED";
 
 interface MyReview {
   reviewId: number;
-  branch: string;
   title: string;
   authorName: string;
   status: ReviewStatus;
@@ -127,8 +125,8 @@ function StatusBadge({ status }: { status: ReviewStatus }) {
 
 // 개발용 미리보기 샘플 데이터 (인증 없이 화면 확인용)
 const DEV_MOCK_REVIEWS: MyReview[] = [
-  { reviewId: 1, branch: "N수관", title: "독학재수학원 이용 후기 (샘플)", authorName: "홍길동", status: "PENDING", createdAt: "2026-03-10T00:00:00Z" },
-  { reviewId: 2, branch: "하이엔드관", title: "수업 품질이 좋았어요 (샘플)", authorName: "김철수", status: "APPROVED", createdAt: "2026-03-08T00:00:00Z" },
+  { reviewId: 1, title: "독학재수학원 이용 후기 (샘플)", authorName: "홍길동", status: "PENDING", createdAt: "2026-03-10T00:00:00Z" },
+  { reviewId: 2, title: "수업 품질이 좋았어요 (샘플)", authorName: "김철수", status: "APPROVED", createdAt: "2026-03-08T00:00:00Z" },
 ];
 
 export default function MyReviewsPage() {
@@ -345,7 +343,6 @@ export default function MyReviewsPage() {
                 >
                   <div className="mb-2 flex flex-wrap items-center gap-2">
                     <span className="text-xs font-medium text-slate-400">#{index + 1}</span>
-                    <BranchBadge branch={item.branch} />
                     <StatusBadge status={item.status} />
                   </div>
                   <Link
@@ -379,9 +376,6 @@ export default function MyReviewsPage() {
                     <th className="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-slate-500">
                       번호
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-semibold uppercase tracking-wider text-slate-500">
-                      관 종류
-                    </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                       제목
                     </th>
@@ -404,11 +398,6 @@ export default function MyReviewsPage() {
                     <tr key={item.reviewId} className="transition-colors hover:bg-slate-50/70">
                       <td className="px-6 py-4 text-center text-sm font-medium text-slate-400">
                         {index + 1}
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex justify-center">
-                          <BranchBadge branch={item.branch} />
-                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <Link
