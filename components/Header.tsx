@@ -31,7 +31,7 @@ const infoMenus: Menu[] = [
     href: '/about/roadmap',
     subMenus: [
       { label: '(1) ABOUT 로드맵', href: '/about/roadmap' },
-      { label: '(2) 일반 관리형 독서실과의 차별화', href: '/about/diff' },
+      { label: '(2) 로드맵의 차별화된 관리', href: '/about/diff' },
       { label: '(3) 관리시스템', href: '/about/system' },
       { label: '(4) 관리T 소개', href: '/about/teacher' },
     ],

@@ -82,7 +82,7 @@ export default function AboutDiffPage() {
         ]}
         crumbs={[
           { label: "ABOUT 로드맵" },
-          { label: "일반 관리형 독서실과의 차별화", href: "/about/diff" },
+          { label: "로드맵의 차별화된 관리", href: "/about/diff" },
         ]}
       />
 

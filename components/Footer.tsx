@@ -77,7 +77,7 @@ export default function Footer() {
                 <span className="text-white/60">TEL:</span> 070-4833-5678
               </p>
               <p>
-                <span className="text-white/60">사업자번호:</span>
+                <span className="text-white/60">사업자번호:</span> 211-95-46276
               </p>
               <p className="whitespace-nowrap">
                 <span className="text-white/60">주소:</span> 경기도 용인시 기흥구 동백중앙로 283 골드프라자 B동 10층
@@ -93,7 +93,7 @@ export default function Footer() {
                 <span className="text-white/60">TEL:</span> 031-281-5678
               </p>
               <p>
-                <span className="text-white/60">사업자번호:</span>
+                <span className="text-white/60">사업자번호:</span> 707-99-01481
               </p>
               <p className="whitespace-nowrap">
                 <span className="text-white/60">주소:</span> 경기도 용인시 기흥구 동백중앙로 283 골드프라자 A동 6층
