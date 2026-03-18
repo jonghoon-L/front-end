@@ -10,7 +10,7 @@ const SECTIONS = [
     description: "답답함이 1%도 허용되지 않는 넓은 공간에서\n쾌적하게 학습할 수 있습니다",
     items: [
       { image: "/images/place/n/n_p2.jpg", label: "열람실 1 전경" },
-      { image: "/images/place/n/n_p19.jpg", label: "열람실 1 중앙 뷰" },
+      { image: "/images/place/n/n_p23.jpg", label: "열람실 1 중앙 뷰" },
       { image: "/images/place/n/n_p20.jpg", label: "열람실 1 전면 뷰" },
       { image: "/images/place/n/n_p18.jpg", label: "열람실 1 후면 뷰" },
       { image: "/images/place/n/n_p17.jpg", label: "열람실 1 측면 뷰" },
@@ -26,12 +26,12 @@ const SECTIONS = [
   },
   {
     name: "로비",
-    description: "리프레시를 위한 야외 스탠드석이 제공되며\n라운지 및 휴게 공간에서 휴식을 취할 수 있습니다",
+    description: "리프레시를 위한 스탠딩석/대기석이 제공되며\n라운지 및 휴게 공간에서 휴식을 취할 수 있습니다",
     items: [
-      { image: "/images/place/n/n_p10.jpg", label: "로비 전경" },
-      { image: "/images/place/n/n_p5.jpg", label: "로비 야외 스탠드 석" },
-      { image: "/images/place/n/n_p15.jpg", label: "로비 휴게 공간" },
-      { image: "/images/place/n/n_p14.jpg", label: "로비 라운지" },
+      { image: "/images/place/n/n_p24.jpg", label: "로비 전경" },
+      { image: "/images/place/n/n_p25.jpg", label: "로비 스탠딩 석" },
+      { image: "/images/place/n/n_p15.jpg", label: "로비 대기석" },
+      { image: "/images/place/n/n_p27.jpg", label: "로비 라운지" },
     ],
   },
 ];

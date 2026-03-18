@@ -4,7 +4,7 @@ export default function MentoringPricePage() {
   return (
     <main>
       <PageHero
-        imageUrl="/images/place/n/n_p12.jpg"
+        imageUrl="/images/teach.jpg"
         heroStyle={{ backgroundPosition: "center 60%" }}
         lines={["1:1 멘토·플랜·학업관리", "이용료 안내"]}
         crumbs={[

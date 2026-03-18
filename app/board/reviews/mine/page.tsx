@@ -234,8 +234,8 @@ export default function MyReviewsPage() {
   return (
     <main className="min-h-screen overflow-x-hidden bg-white">
       <PageHero
-        imageUrl="/images/place/n/n_p17.jpg"
-        heroStyle={{ backgroundPosition: "center 48%" }}
+        imageUrl="/images/note.jpg"
+        heroStyle={{ backgroundPosition: "center 5%" }}
         lines={["내가 작성한 후기 조회"]}
         crumbs={[
           { label: "이용 후기", href: "/board/reviews" },

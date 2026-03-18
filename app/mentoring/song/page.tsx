@@ -5,7 +5,7 @@ export default function MentoringSongPage() {
   return (
     <main>
       <PageHero
-        imageUrl="/images/place/n/n_p19.jpg"
+        imageUrl="/images/teach.jpg"
         heroStyle={{ backgroundPosition: "center 55%" }}
         lines={[
           "로드맵이 자랑하는",

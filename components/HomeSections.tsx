@@ -6,7 +6,7 @@ import NaverMapSection from "@/components/NaverMapSection";
 const N_FACILITIES = [
   { name: "N수관 시설 1", image: "/images/place/n/n_p2.jpg" },
   { name: "N수관 시설 2", image: "/images/place/n/n_p10.jpg" },
-  { name: "N수관 시설 3", image: "/images/place/n/n_p19.jpg" },
+  { name: "N수관 시설 3", image: "/images/place/n/n_p23.jpg" },
   { name: "N수관 시설 4", image: "/images/place/n/n_p20.jpg" },
   { name: "N수관 시설 5", image: "/images/place/n/n_p12.jpg" },
   { name: "N수관 시설 6", image: "/images/place/n/n_p18.jpg" },
@@ -14,13 +14,11 @@ const N_FACILITIES = [
 ];
 
 const H_FACILITIES = [
-  { name: "하이엔드관 시설 1", image: "/images/place/hi/hi_p2.jpg" },
-  { name: "하이엔드관 시설 2", image: "/images/place/hi/hi_p4.jpg" },
-  { name: "하이엔드관 시설 3", image: "/images/place/hi/hi_p5.jpg" },
-  { name: "하이엔드관 시설 4", image: "/images/place/hi/hi_p8.jpg" },
-  { name: "하이엔드관 시설 5", image: "/images/place/hi/hi_p9.jpg" },
-  { name: "하이엔드관 시설 6", image: "/images/place/hi/hi_p10.jpg" },
-  { name: "하이엔드관 시설 7", image: "/images/place/hi/hi_p12.jpg" },
+  { name: "하이엔드관 시설 1", image: "/images/place/hi/hi_p20.jpg" },
+  { name: "하이엔드관 시설 2", image: "/images/place/hi/hi_p17.jpg" },
+  { name: "하이엔드관 시설 3", image: "/images/place/hi/hi_p18.jpg" },
+  { name: "하이엔드관 시설 4", image: "/images/place/hi/hi_p16.jpg" },
+  { name: "하이엔드관 시설 5", image: "/images/place/hi/hi_p23.jpg" },
 ];
 
 const DIFF_CARDS = [

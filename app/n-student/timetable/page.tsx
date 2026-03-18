@@ -5,8 +5,8 @@ export default function NStudentTimetablePage() {
   return (
     <main>
       <PageHero
-        imageUrl="/images/place/n/n_p8.jpg"
-        heroStyle={{ backgroundPosition: "center 45%" }}
+        imageUrl="/images/place/hi/hi_p9.jpg"
+        heroStyle={{ backgroundPosition: "center 65%" }}
         lines={["로드맵 N수생 전용관", "운영 시간 안내"]}
         crumbs={[
           { label: "로드맵 N수생 전용관" },

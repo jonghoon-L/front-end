@@ -44,7 +44,7 @@ export default function StudyMaterialsPage() {
   return (
     <main className="min-h-screen overflow-x-hidden bg-white">
       <PageHero
-        imageUrl="/images/place/n/n_p12.jpg"
+        imageUrl="/images/place/n/n_p25.jpg"
         heroStyle={{ backgroundPosition: "center 55%" }}
         lines={["학업 자료"]}
         crumbs={[
