@@ -74,7 +74,7 @@ const infoMenus: Menu[] = [
     href: '/board/reviews',
   },
   {
-    label: '게시판',
+    label: '학업 자료',
     href: '/board/study-materials',
   },
 ]

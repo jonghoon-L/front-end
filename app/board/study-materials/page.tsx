@@ -46,9 +46,9 @@ export default function StudyMaterialsPage() {
       <PageHero
         imageUrl="/images/place/n/n_p12.jpg"
         heroStyle={{ backgroundPosition: "center 55%" }}
-        lines={["학업 자료 게시판"]}
+        lines={["학업 자료"]}
         crumbs={[
-          { label: "학업 자료 게시판" },
+          { label: "학업 자료" },
         ]}
       />
 
