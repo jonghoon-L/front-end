@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import PageHero from "@/components/PageHero";
 import { reviewPosts } from "./data";
+import { blurName } from "@/lib/blurName";
 import { ChevronLeft, ChevronRight, Pin, Pencil } from "lucide-react";
 import { useFadeIn } from "@/hooks/useFadeIn";
 
@@ -66,7 +67,8 @@ export default function ReviewsPage() {
           {pagedPosts.map((post, index) => {
             const isPinned = post.isTop;
             const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-            const regularNum = filteredAndSortedPosts.slice(0, fullIndex).filter((p) => !p.isTop).length + 1;
+            const totalRegular = filteredAndSortedPosts.filter((p) => !p.isTop).length;
+            const regularNum = totalRegular - filteredAndSortedPosts.slice(0, fullIndex).filter((p) => !p.isTop).length;
             return (
               <Link
                 key={post.id}
@@ -93,7 +95,7 @@ export default function ReviewsPage() {
                       {post.title}
                     </h3>
                     <div className={`mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs ${isPinned ? "font-semibold text-slate-700" : "text-slate-500"}`}>
-                      <span>{post.author}</span>
+                      <span>{blurName(post.author)}</span>
                       <span>{post.createdAt}</span>
                       <span>조회 {post.views}</span>
                     </div>
@@ -139,7 +141,8 @@ export default function ReviewsPage() {
                 {pagedPosts.map((post, index) => {
                   const isPinned = post.isTop;
                   const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-                  const regularNum = filteredAndSortedPosts.slice(0, fullIndex).filter((p) => !p.isTop).length + 1;
+                  const totalRegular = filteredAndSortedPosts.filter((p) => !p.isTop).length;
+                  const regularNum = totalRegular - filteredAndSortedPosts.slice(0, fullIndex).filter((p) => !p.isTop).length;
                   return (
                     <tr
                       key={post.id}
@@ -168,7 +171,7 @@ export default function ReviewsPage() {
                           <ChevronRight className="h-4 w-4 shrink-0 opacity-0 transition-opacity group-hover:opacity-100" />
                         </Link>
                       </td>
-                      <td className={`px-8 py-5 text-center text-base ${isPinned ? "font-semibold text-slate-800" : "text-slate-500"}`}>{post.author}</td>
+                      <td className={`px-8 py-5 text-center text-base ${isPinned ? "font-semibold text-slate-800" : "text-slate-500"}`}>{blurName(post.author)}</td>
                       <td className={`px-8 py-5 text-center text-base ${isPinned ? "font-semibold text-slate-800" : "text-slate-500"}`}>{post.createdAt}</td>
                       <td className={`px-8 py-5 text-center text-base ${isPinned ? "font-semibold text-slate-800" : "text-slate-400"}`}>{post.views}</td>
                     </tr>

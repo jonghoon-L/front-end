@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import PageHero from "@/components/PageHero";
+import { blurName } from "@/lib/blurName";
 import FadeInSection from "@/components/FadeInSection";
 import { getReviewPostById } from "../data";
 import { ArrowLeft, Eye } from "lucide-react";
@@ -44,7 +45,7 @@ export default async function ReviewDetailPage({ params, searchParams }: Props) 
               {post.title}
             </h1>
             <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-500">
-              <span className="font-medium text-slate-700">{post.author}</span>
+              <span className="font-medium text-slate-700">{blurName(post.author)}</span>
               <span className="text-slate-300">·</span>
               <span>{post.createdAt}</span>
               <span className="text-slate-300">·</span>

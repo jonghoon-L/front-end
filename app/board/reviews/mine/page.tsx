@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { blurName } from "@/lib/blurName";
 import PageHero from "@/components/PageHero";
 import { Trash2 } from "lucide-react";
 import { useFadeIn } from "@/hooks/useFadeIn";
@@ -408,7 +409,7 @@ export default function MyReviewsPage() {
                         </Link>
                       </td>
                       <td className="px-6 py-4 text-center text-sm text-slate-500">
-                        {item.authorName}
+                        {blurName(item.authorName)}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex justify-center">
