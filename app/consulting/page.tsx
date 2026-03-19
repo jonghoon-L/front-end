@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import ConsultationCalendar from "@/components/ConsultationCalendar";
+import { getAvailableTimeSlots } from "@/lib/consultationSlots";
 
 type Branch = "N" | "Hi-end";
 
@@ -9,19 +10,6 @@ const BRANCH_OPTIONS: { value: Branch; label: string }[] = [
   { value: "N", label: "N수생관" },
   { value: "Hi-end", label: "하이엔드관" },
 ];
-
-const MORNING_SLOTS = ["10:00", "11:00"];
-const AFTERNOON_SLOTS = ["12:00", "14:00", "15:00", "16:00", "17:00"];
-
-/** API 응답: 월별 상담 가능 스케줄 */
-interface ConsultationsScheduleResponse {
-  branch: string;
-  yearMonth: string;
-  availableSchedules: {
-    date: string;
-    availableTimes: string[];
-  }[];
-}
 
 function getConsultApiBase(): string {
   if (typeof process === "undefined") return "";
@@ -99,33 +87,12 @@ async function submitConsultation(
   return data;
 }
 
-async function fetchConsultationsSchedule(
-  branch: Branch,
-  yearMonth: string
-): Promise<ConsultationsScheduleResponse> {
-  const base = getConsultApiBase();
-  if (!base) throw new Error("API 주소가 설정되지 않았습니다. NEXT_PUBLIC_CONSULT_API_BASE를 설정해 주세요.");
-  const params = new URLSearchParams({ branch, yearMonth });
-  const res = await fetch(`${base}/v1/common/consultations?${params}`, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-  });
-  if (!res.ok) throw new Error(`스케줄 조회 실패: ${res.status}`);
-  return res.json();
-}
-
 /** 특정 날짜에 대해 “가능한” 시간을 목 데이터로 반환 (선택된 날짜의 해시 기반) */
 function formatDateForInput(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
-}
-
-function toYearMonth(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  return `${y}-${m}`;
 }
 
 export default function ConsultingPage() {
@@ -140,53 +107,28 @@ export default function ConsultingPage() {
   const [verificationSent, setVerificationSent] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [scheduleData, setScheduleData] = useState<ConsultationsScheduleResponse | null>(null);
-  const [scheduleLoading, setScheduleLoading] = useState(false);
-  const [scheduleError, setScheduleError] = useState<string | null>(null);
   const [sendCodeLoading, setSendCodeLoading] = useState(false);
   const [sendCodeError, setSendCodeError] = useState<string | null>(null);
   const [verificationToken, setVerificationToken] = useState<string | null>(null);
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [verifyError, setVerifyError] = useState<string | null>(null);
 
-  const yearMonth = useMemo(() => toYearMonth(calendarMonth), [calendarMonth]);
+  const timeSlots = useMemo(() => {
+    if (!selectedDate || !branch) return [];
+    const d = new Date(selectedDate + "T12:00:00");
+    return getAvailableTimeSlots(branch, d);
+  }, [selectedDate, branch]);
 
-  useEffect(() => {
-    if (!branch) {
-      setScheduleData(null);
-      setScheduleError(null);
-      return;
-    }
-    let cancelled = false;
-    setScheduleLoading(true);
-    setScheduleError(null);
-    fetchConsultationsSchedule(branch, yearMonth)
-      .then((data) => {
-        if (!cancelled) setScheduleData(data);
-      })
-      .catch((err) => {
-        if (!cancelled) setScheduleError(err instanceof Error ? err.message : "스케줄을 불러오지 못했습니다.");
-      })
-      .finally(() => {
-        if (!cancelled) setScheduleLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [branch, yearMonth]);
+  const morningSlots = useMemo(
+    () => timeSlots.filter((t) => t < "12:00"),
+    [timeSlots]
+  );
+  const afternoonSlots = useMemo(
+    () => timeSlots.filter((t) => t >= "12:00"),
+    [timeSlots]
+  );
 
-  const MOCK_TIMES = ["10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00"];
-
-  const availableTimesForDate = useMemo(() => {
-    if (!selectedDate) return [];
-    if (scheduleData?.availableSchedules) {
-      const found = scheduleData.availableSchedules.find((s) => s.date === selectedDate);
-      if (found?.availableTimes?.length) return found.availableTimes;
-    }
-    return MOCK_TIMES;
-  }, [selectedDate, scheduleData]);
-
-  const hasSlots = selectedDate && availableTimesForDate.length > 0;
+  const hasSlots = selectedDate && timeSlots.length > 0;
 
   const handleMonthChange = (date: Date) => {
     setCalendarMonth(date);
@@ -295,16 +237,6 @@ export default function ConsultingPage() {
             <h3 className="text-gray-900 font-medium text-base mb-2">상담을 원하는 시간을 선택해주세요</h3>
             <hr className="border-gray-200 mb-4" />
 
-            {scheduleError && (
-              <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-base text-red-700 mb-4">
-                {scheduleError}
-              </div>
-            )}
-            {branch && scheduleLoading && (
-              <div className="rounded-xl border border-gray-200 bg-gray-50 px-5 py-4 text-base text-gray-600 mb-4">
-                스케줄을 불러오는 중…
-              </div>
-            )}
             {/* 캘린더 */}
             <div className="mb-4">
               <ConsultationCalendar
@@ -342,66 +274,54 @@ export default function ConsultingPage() {
             {selectedDate && hasSlots && (
               <div className="rounded-none border border-gray-200 p-5">
                 <div className="space-y-5">
-                  <div>
-                    <p className="text-base font-semibold text-gray-800 mb-2">오전</p>
-                    <div className="grid grid-cols-4 gap-3">
-                      {MORNING_SLOTS.map((t) => {
-                        const isAvailable = availableTimesForDate.includes(t);
-                        const isSelected = selectedTime === t;
-                        return (
-                          <button
-                            key={t}
-                            type="button"
-                            disabled={!isAvailable}
-                            onClick={() => isAvailable && setSelectedTime(t)}
-                            className={`py-3 rounded-2xl text-base border transition-colors ${
-                              !isAvailable
-                                ? "cursor-not-allowed border-gray-200 bg-white text-gray-400"
-                                : isSelected
-                                  ? "cursor-pointer border-slate-800 bg-slate-800 text-white hover:bg-slate-700"
-                                  : "cursor-pointer border-gray-200 bg-gray-200 text-gray-800 hover:bg-gray-300"
-                            }`}
-                          >
-                            {t}
-                          </button>
-                        );
-                      })}
+                  {morningSlots.length > 0 && (
+                    <div>
+                      <p className="text-base font-semibold text-gray-800 mb-2">오전</p>
+                      <div className="grid grid-cols-4 gap-3">
+                        {morningSlots.map((t) => {
+                          const isSelected = selectedTime === t;
+                          return (
+                            <button
+                              key={t}
+                              type="button"
+                              onClick={() => setSelectedTime(t)}
+                              className={`py-3 rounded-2xl text-base border transition-colors cursor-pointer ${
+                                isSelected
+                                  ? "border-slate-800 bg-slate-800 text-white hover:bg-slate-700"
+                                  : "border-gray-200 bg-gray-200 text-gray-800 hover:bg-gray-300"
+                              }`}
+                            >
+                              {t}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <p className="text-base font-semibold text-gray-800 mb-2">오후</p>
-                    <div className="grid grid-cols-4 gap-3">
-                      {AFTERNOON_SLOTS.map((t) => {
-                        const isAvailable = availableTimesForDate.includes(t);
-                        const isSelected = selectedTime === t;
-                        return (
-                          <button
-                            key={t}
-                            type="button"
-                            disabled={!isAvailable}
-                            onClick={() => isAvailable && setSelectedTime(t)}
-                            className={`py-3 rounded-2xl text-base border transition-colors ${
-                              !isAvailable
-                                ? "cursor-not-allowed border-gray-200 bg-white text-gray-400"
-                                : isSelected
-                                  ? "cursor-pointer border-slate-800 bg-slate-800 text-white hover:bg-slate-700"
-                                  : "cursor-pointer border-gray-200 bg-gray-200 text-gray-800 hover:bg-gray-300"
-                            }`}
-                          >
-                            {t}
-                          </button>
-                        );
-                      })}
+                  )}
+                  {afternoonSlots.length > 0 && (
+                    <div>
+                      <p className="text-base font-semibold text-gray-800 mb-2">오후</p>
+                      <div className="grid grid-cols-4 gap-3">
+                        {afternoonSlots.map((t) => {
+                          const isSelected = selectedTime === t;
+                          return (
+                            <button
+                              key={t}
+                              type="button"
+                              onClick={() => setSelectedTime(t)}
+                              className={`py-3 rounded-2xl text-base border transition-colors cursor-pointer ${
+                                isSelected
+                                  ? "border-slate-800 bg-slate-800 text-white hover:bg-slate-700"
+                                  : "border-gray-200 bg-gray-200 text-gray-800 hover:bg-gray-300"
+                              }`}
+                            >
+                              {t}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                </div>
-                <div className="flex gap-4 text-base text-gray-500 mt-4 pt-4 border-t border-gray-100 justify-end">
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-4 h-4 rounded-md border border-gray-200 bg-gray-200" /> 가능
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-4 h-4 rounded-md border border-gray-200 bg-white" /> 불가능
-                  </span>
+                  )}
                 </div>
               </div>
             )}

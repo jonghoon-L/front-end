@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { Calendar } from "lucide-react";
 import ConsultationCalendar from "@/components/ConsultationCalendar";
+import { getAllTimeSlotsForDate } from "@/lib/consultationSlots";
 
 type Branch = "N" | "Hi-end";
 
@@ -20,22 +21,22 @@ const BRANCH_LABELS: Record<Branch, string> = {
   "Hi-end": "하이엔드관",
 };
 
-const TIME_SLOTS = ["10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00"];
-
+/** 요구사항에 맞는 시간대만 사용한 임시 상담 데이터 (N수관: 평일/토 10:00,17:00 / 하이엔드: 평일 17:00,20:00, 토 10:00,16:00) */
 const MOCK_CONSULTATIONS: ConsultationItem[] = [
   { id: 1, date: "2026-03-17", time: "10:00", name: "김민준", age: 19, branch: "N" },
-  { id: 2, date: "2026-03-17", time: "11:00", name: "이서연", age: 18, branch: "Hi-end" },
-  { id: 3, date: "2026-03-17", time: "14:00", name: "박지호", age: 20, branch: "N" },
-  { id: 4, date: "2026-03-17", time: "16:00", name: "최수빈", age: 21, branch: "Hi-end" },
-  { id: 5, date: "2026-03-18", time: "10:00", name: "정하은", age: 19, branch: "N" },
-  { id: 6, date: "2026-03-18", time: "15:00", name: "강준서", age: 18, branch: "N" },
-  { id: 7, date: "2026-03-19", time: "10:00", name: "조예린", age: 20, branch: "Hi-end" },
-  { id: 8, date: "2026-03-19", time: "12:00", name: "윤도윤", age: 19, branch: "N" },
-  { id: 9, date: "2026-03-19", time: "17:00", name: "임서윤", age: 21, branch: "Hi-end" },
-  { id: 10, date: "2026-03-20", time: "11:00", name: "한지우", age: 18, branch: "N" },
-  { id: 11, date: "2026-03-20", time: "14:00", name: "오민지", age: 20, branch: "N" },
+  { id: 2, date: "2026-03-17", time: "17:00", name: "이서연", age: 18, branch: "N" },
+  { id: 3, date: "2026-03-17", time: "20:00", name: "최수빈", age: 21, branch: "Hi-end" },
+  { id: 4, date: "2026-03-18", time: "10:00", name: "정하은", age: 19, branch: "N" },
+  { id: 5, date: "2026-03-18", time: "17:00", name: "강준서", age: 18, branch: "N" },
+  { id: 6, date: "2026-03-18", time: "20:00", name: "박지호", age: 20, branch: "Hi-end" },
+  { id: 7, date: "2026-03-19", time: "17:00", name: "조예린", age: 20, branch: "Hi-end" },
+  { id: 8, date: "2026-03-19", time: "10:00", name: "윤도윤", age: 19, branch: "N" },
+  { id: 9, date: "2026-03-19", time: "20:00", name: "임서윤", age: 21, branch: "Hi-end" },
+  { id: 10, date: "2026-03-20", time: "10:00", name: "한지우", age: 18, branch: "N" },
+  { id: 11, date: "2026-03-20", time: "17:00", name: "오민지", age: 20, branch: "N" },
   { id: 12, date: "2026-03-21", time: "10:00", name: "신재윤", age: 19, branch: "Hi-end" },
-  { id: 13, date: "2026-03-21", time: "15:00", name: "권수아", age: 18, branch: "N" },
+  { id: 13, date: "2026-03-21", time: "16:00", name: "권수아", age: 18, branch: "Hi-end" },
+  { id: 14, date: "2026-03-21", time: "17:00", name: "배성민", age: 20, branch: "N" },
 ];
 
 function formatDateForInput(d: Date): string {
@@ -71,6 +72,12 @@ export default function ConsultationsPage() {
     });
     return map;
   }, [consultationsForDate]);
+
+  const timeSlotsForSelectedDate = useMemo(() => {
+    if (!selectedDate) return [];
+    const d = new Date(selectedDate + "T12:00:00");
+    return getAllTimeSlotsForDate(d);
+  }, [selectedDate]);
 
   const displayDate = selectedDate
     ? `${selectedDate.slice(0, 4)}년 ${selectedDate.slice(5, 7)}월 ${selectedDate.slice(8, 10)}일`
@@ -124,7 +131,7 @@ export default function ConsultationsPage() {
               </div>
             ) : (
               <div className="p-4 space-y-2">
-                {TIME_SLOTS.map((time) => {
+                {timeSlotsForSelectedDate.map((time) => {
                   const consultation = reservationByTime[time];
                   const isN = consultation?.branch === "N";
                   const isHiEnd = consultation?.branch === "Hi-end";

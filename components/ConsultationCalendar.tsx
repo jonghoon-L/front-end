@@ -100,7 +100,7 @@ export default function ConsultationCalendar({
           const isSelected = selectedDate === dateStr;
           const isPast = disablePastDates && dateStr < todayStr;
           const isSunday = date.getDay() === 0;
-          const disabled = isPast;
+          const disabled = isPast || isSunday;
           const count = reservationCountByDate[dateStr] ?? 0;
           return (
             <button
