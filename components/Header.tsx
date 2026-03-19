@@ -7,8 +7,8 @@ import { SiKakaotalk, SiNaver } from "react-icons/si";
 import { FaInstagram } from "react-icons/fa";
 
 const KAKAO_CHANNELS = [
-  { label: "로드맵 N수관 카카오 채널", href: "https://pf.kakao.com/_x" },
-  { label: "로드맵 하이엔드관 카카오 채널", href: "https://pf.kakao.com/_x" },
+  { label: "로드맵 N수관 카카오 채널", href: "https://pf.kakao.com/_vbaxcxj" },
+  { label: "로드맵 하이엔드관 카카오 채널", href: "https://pf.kakao.com/_xmwRIG" },
 ] as const;
 
 const SNS_LINKS = [

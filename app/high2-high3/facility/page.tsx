@@ -7,7 +7,7 @@ import PageHero from "@/components/PageHero";
 const SECTIONS = [
   {
     name: "열람실 1",
-    description: "약 90명까지 수용 가능한 압도적인 공간에서\n최적의 학습을 경험할 수 있습니다",
+    description: "80명까지 수용 가능한 압도적인 공간에서\n최적의 학습을 경험할 수 있습니다",
     items: [
       { image: "/images/place/hi/hi_p20.jpg", label: "열람실 1 전경" },
       { image: "/images/place/hi/hi_p18.jpg", label: "열람실 1 중앙 뷰" },
