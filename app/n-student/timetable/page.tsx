@@ -7,10 +7,10 @@ export default function NStudentTimetablePage() {
       <PageHero
         imageUrl="/images/place/hi/hi_p9.jpg"
         heroStyle={{ backgroundPosition: "center 65%" }}
-        lines={["로드맵 N수생 전용관", "운영 시간 안내"]}
+        lines={["로드맵 N수생 전용관", "운영 시스템 안내"]}
         crumbs={[
           { label: "로드맵 N수생 전용관" },
-          { label: "시간표", href: "/n-student/timetable" },
+          { label: "시간표 및 관리시스템", href: "/n-student/timetable" },
         ]}
       />
 
@@ -32,6 +32,26 @@ export default function NStudentTimetablePage() {
             className="motion-rise motion-delay-1 h-auto w-full"
             priority
           />
+
+          {/* 안내 문구 CTA (관리시스템 페이지와 동일 스타일) */}
+          <div className="motion-rise motion-delay-2 mb-12 mt-24 text-center md:mt-28 md:mb-16">
+            <p className="text-lg font-medium text-gray-600 md:text-xl">더 자세한 관리시스템 정보는</p>
+            <p className="mt-1 text-2xl font-extrabold text-gray-900 md:text-3xl">
+              하단의 안내 책자 보기 버튼을 클릭해 확인해주세요
+            </p>
+          </div>
+
+          {/* 안내 책자 보기 버튼 */}
+          <div className="motion-rise motion-delay-3 flex flex-wrap justify-center gap-4">
+            <a
+              href="https://heyzine.com/flip-book/451a350b6a.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center rounded-full bg-slate-900 px-8 py-3 text-base font-bold text-white shadow-md transition-all duration-200 hover:-translate-y-1 hover:bg-slate-800"
+            >
+              N수생 전용관 안내 책자 보기
+            </a>
+          </div>
         </div>
       </section>
     </main>
