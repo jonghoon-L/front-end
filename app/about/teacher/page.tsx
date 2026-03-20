@@ -2,6 +2,17 @@ import PageHero from "@/components/PageHero";
 import Image from "next/image";
 
 export default function AboutTeacherPage() {
+  /** 직급별 뱃지 스타일 (무채색 모노톤, 하이엔드 모던) */
+  function getBadgeStyle(role: string) {
+    if (role === "원장T" || role === "부원장T") {
+      return { backgroundColor: "#171717", color: "#FFFFFF" };
+    }
+    if (role === "상담 관리 T") {
+      return { backgroundColor: "#71717A", color: "#FFFFFF" };
+    }
+    return { backgroundColor: "#E4E4E7", color: "#171717" };
+  }
+
   const directors = [
     {
       role: "원장T",
@@ -14,7 +25,7 @@ export default function AboutTeacherPage() {
         "현) 로드맵 입시 관리형 독서실 원장",
       ],
       photo: "/images/about/원장T.jpg",
-      accent: "bg-emerald-700",
+      accent: "bg-emerald-600",
     },
     {
       role: "부원장T",
@@ -26,7 +37,7 @@ export default function AboutTeacherPage() {
         "현) 로드맵 하이엔드 독서실 부원장",
       ],
       photo: "/images/about/부원장T_v2.jpg",
-      accent: "bg-emerald-700",
+      accent: "bg-emerald-600",
     },
     {
       role: "상담 관리 T",
@@ -40,6 +51,22 @@ export default function AboutTeacherPage() {
       ],
       photo: "/images/about/의준T.jpg",
       accent: "bg-slate-700",
+    },
+    {
+      role: "관리 T",
+      namePart: "이종훈",
+      titlePart: "선생님",
+      careers: [],
+      photo: "/images/about/종훈T.jpg",
+      accent: "bg-emerald-600",
+    },
+    {
+      role: "관리 T",
+      namePart: "김나경",
+      titlePart: "선생님",
+      careers: [],
+      photo: "/images/about/나경T.jpg",
+      accent: "bg-emerald-600",
     },
   ];
 
@@ -70,22 +97,22 @@ export default function AboutTeacherPage() {
             {directors.map((director, index) => (
               <article
                 key={director.role + director.namePart}
-                className="motion-rise group flex h-[320px] flex-col overflow-hidden border border-gray-200 bg-white shadow-sm transition-shadow duration-300 hover:shadow-lg md:flex-row"
+                className="motion-rise group flex h-[290px] flex-col overflow-hidden border border-gray-200 bg-white shadow-sm transition-shadow duration-300 hover:shadow-lg md:flex-row"
                 style={{ animationDelay: `${180 + index * 150}ms` }}
               >
-                <div className="flex h-[180px] shrink-0 items-center justify-center p-6 md:h-full md:w-[280px] md:p-8">
-                  <div className={`relative h-full w-full overflow-hidden shadow-sm ${director.namePart === "김현정" ? "bg-white" : "bg-gray-200"}`}>
+                <div className="flex h-[180px] shrink-0 items-start justify-center bg-transparent pt-6 pb-6 pl-6 pr-6 md:h-full md:w-[280px] md:pt-8 md:pb-8 md:pl-8 md:pr-8">
+                  <div className="relative h-full w-full overflow-hidden">
                     {director.photo ? (
                       <Image
                         src={director.photo}
                         alt={`${director.namePart} ${director.titlePart} 프로필 사진`}
                         fill
-                        className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+                        className="object-contain transition-transform duration-500 group-hover:scale-[1.02]"
                         sizes="280px"
                       />
                     ) : (
                       <div
-                        className="flex h-full w-full items-center justify-center bg-gray-200 text-sm text-gray-500"
+                        className="flex h-full w-full items-center justify-center bg-white text-sm text-gray-500"
                         aria-label="프로필 사진 준비중"
                       />
                     )}
@@ -93,24 +120,39 @@ export default function AboutTeacherPage() {
                 </div>
 
                 <div className="flex flex-1 flex-col justify-start overflow-y-auto pt-8 px-8 pb-8">
-                  <div className="mb-5">
-                    <span className={`${director.accent} rounded-full px-3 py-1 text-xs font-bold tracking-[0.12em] text-white`}>
+                  <div className="mb-4">
+                    <span
+                      className="rounded-full px-3 py-1 text-xs font-bold tracking-[0.12em]"
+                      style={getBadgeStyle(director.role)}
+                    >
                       {director.role}
                     </span>
-                    <h3 className="mt-3">
-                      <span className="text-2xl font-extrabold text-gray-900">{director.namePart}</span>
-                      <span className="ml-2 text-lg font-medium text-gray-700">{director.titlePart}</span>
+                    <h3 className="mt-2.5">
+                      <span className="text-[1.45rem] font-extrabold text-gray-900">{director.namePart}</span>
+                      <span className="ml-2 text-[1.125rem] font-medium text-gray-700">{director.titlePart}</span>
                     </h3>
                   </div>
 
-                  <ul className="space-y-3">
-                    {director.careers.map((career) => (
-                      <li key={career} className="flex gap-3 text-gray-700">
-                        <span className={`mt-[10px] h-1.5 w-1.5 shrink-0 rounded-full ${director.role === "상담 관리 T" ? "bg-slate-700" : "bg-emerald-600"}`} />
-                        <span className="leading-7">{career}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  {director.careers.length > 0 && (
+                    <ul className="space-y-2.5">
+                      {director.careers.map((career) => (
+                        <li key={career} className="flex gap-3 text-gray-700">
+                          <span
+                            className="mt-[8px] h-1.5 w-1.5 shrink-0 rounded-full"
+                            style={{
+                              backgroundColor:
+                                director.role === "원장T" || director.role === "부원장T"
+                                  ? "#171717"
+                                  : director.role === "상담 관리 T"
+                                    ? "#71717A"
+                                    : "#A1A1AA",
+                            }}
+                          />
+                          <span className="text-[1rem] leading-[1.625rem]">{career}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </article>
             ))}
