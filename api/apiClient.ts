@@ -14,13 +14,23 @@ const getApiBaseUrl = (): string => {
 /** localStorage에 저장할 토큰 키 (로그인 연동 시 사용) */
 export const AUTH_TOKEN_KEY = "authToken";
 
-/** API 요청 시 사용할 토큰 조회 - token 옵션 우선, 없으면 localStorage에서 조회 */
+/** 관리자 로그아웃 시 삭제할 토큰 키 목록 */
+export const TOKEN_KEYS_TO_CLEAR = ["authToken", "token"] as const;
+
+/** API 요청 시 사용할 토큰 조회 - token 옵션 우선, 없으면 localStorage에서 authToken → token 순으로 조회 */
 function resolveToken(token?: string | null): string | null {
   if (token !== undefined && token !== null) return token;
   if (typeof window !== "undefined") {
-    return localStorage.getItem(AUTH_TOKEN_KEY);
+    return localStorage.getItem(AUTH_TOKEN_KEY) || localStorage.getItem("token");
   }
   return null;
+}
+
+/** 401 발생 시 토큰 삭제 후 /admin/login으로 리다이렉트 */
+function handleUnauthorized(): void {
+  if (typeof window === "undefined") return;
+  TOKEN_KEYS_TO_CLEAR.forEach((key) => localStorage.removeItem(key));
+  window.location.href = "/admin/login";
 }
 
 export interface ApiRequestOptions extends Omit<RequestInit, "headers" | "body"> {
@@ -79,6 +89,9 @@ export async function apiClient<T = unknown>(path: string, options: ApiRequestOp
   const isJsonResponse = contentType?.includes("application/json");
 
   if (!res.ok) {
+    if (res.status === 401) {
+      handleUnauthorized();
+    }
     const errData = isJsonResponse ? await res.json().catch(() => ({})) : {};
     const message = (errData as { message?: string })?.message ?? `요청 실패: ${res.status}`;
     throw new Error(message);

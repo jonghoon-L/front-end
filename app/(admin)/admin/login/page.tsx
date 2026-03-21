@@ -3,22 +3,30 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { apiPost, AUTH_TOKEN_KEY } from "@/api/apiClient";
+
+interface AdminLoginResponse {
+  success: boolean;
+  accessToken?: string;
+}
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [adminId, setAdminId] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [idError, setIdError] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [showTransition, setShowTransition] = useState(false);
+  const [showLoginErrorModal, setShowLoginErrorModal] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const idTrimmed = adminId.trim();
+    const usernameTrimmed = username.trim();
     const passwordTrimmed = password.trim();
 
-    const hasIdError = !idTrimmed;
+    const hasIdError = !usernameTrimmed;
     const hasPasswordError = !passwordTrimmed;
 
     setIdError(hasIdError ? "관리자 ID를 입력해주세요" : "");
@@ -28,10 +36,24 @@ export default function AdminLoginPage() {
       return;
     }
 
-    console.log("Admin ID:", idTrimmed);
-    console.log("Password:", passwordTrimmed);
+    setIsLoading(true);
+    try {
+      const data = await apiPost<AdminLoginResponse>("v1/admin/login", {
+        username: usernameTrimmed,
+        password: passwordTrimmed,
+      });
 
-    setShowTransition(true);
+      if (data.success && data.accessToken) {
+        localStorage.setItem(AUTH_TOKEN_KEY, data.accessToken);
+        setShowTransition(true);
+      } else {
+        setShowLoginErrorModal(true);
+      }
+    } catch {
+      setShowLoginErrorModal(true);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -69,20 +91,21 @@ export default function AdminLoginPage() {
           <form onSubmit={handleSubmit} className="space-y-8">
             <div>
               <label
-                htmlFor="adminId"
+                htmlFor="username"
                 className="block text-base font-medium text-slate-700 mb-2"
               >
                 관리자 ID
               </label>
               <input
-                id="adminId"
+                id="username"
                 type="text"
-                value={adminId}
+                value={username}
                 onChange={(e) => {
-                  setAdminId(e.target.value);
+                  setUsername(e.target.value);
                   if (idError) setIdError("");
                 }}
                 placeholder="ID를 입력하세요"
+                disabled={isLoading}
                 className={`w-full px-5 py-4 text-base border rounded-lg focus:ring-2 focus:ring-sky-400 focus:border-sky-400 outline-none transition ${
                   idError ? "border-red-500" : "border-slate-300"
                 }`}
@@ -110,6 +133,7 @@ export default function AdminLoginPage() {
                   if (passwordError) setPasswordError("");
                 }}
                 placeholder="비밀번호를 입력하세요"
+                disabled={isLoading}
                 className={`w-full px-5 py-4 text-base border rounded-lg focus:ring-2 focus:ring-sky-400 focus:border-sky-400 outline-none transition ${
                   passwordError ? "border-red-500" : "border-slate-300"
                 }`}
@@ -123,13 +147,34 @@ export default function AdminLoginPage() {
 
             <button
               type="submit"
-              className="w-full py-4 px-4 bg-black hover:bg-slate-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition text-base"
+              disabled={isLoading}
+              className="w-full py-4 px-4 bg-black hover:bg-slate-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition text-base cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              로그인
+              {isLoading ? "로그인 중…" : "로그인"}
             </button>
           </form>
         </div>
       </div>
+
+      {/* 로그인 실패 알림 모달 */}
+      {showLoginErrorModal && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-[280px] bg-black/50 animate-[logo-transition-fade-in_0.3s_ease-out]">
+          <div className="mx-4 w-full max-w-xl rounded-xl bg-white p-10 shadow-xl animate-[confirm-modal-appear_0.6s_ease-out]">
+            <p className="mb-8 text-center text-base text-slate-700">
+              아이디 또는 비밀번호가 올바르지 않습니다
+            </p>
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={() => setShowLoginErrorModal(false)}
+                className="rounded-lg bg-slate-700 px-8 py-3 text-base font-medium text-white hover:bg-slate-800 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] transition cursor-pointer"
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

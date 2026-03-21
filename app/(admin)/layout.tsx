@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Noto_Sans_KR } from "next/font/google";
 import { LayoutDashboard, Calendar, Users, MessageSquare } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
+import { TOKEN_KEYS_TO_CLEAR } from "@/api/apiClient";
 
 const notoSansKr = Noto_Sans_KR({
   subsets: ["latin"],
@@ -39,7 +40,7 @@ export default function AdminLayout({
   };
 
   const handleConfirmGoToMain = () => {
-    // TODO: 추후 관리자 토큰(accessToken) 제거 로직 추가 예정
+    TOKEN_KEYS_TO_CLEAR.forEach((key) => localStorage.removeItem(key));
     setShowConfirmModal(false);
     router.push("/");
   };
