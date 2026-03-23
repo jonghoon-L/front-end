@@ -22,7 +22,7 @@ export default function AboutTeacherPage() {
         "전) 대성 학원 수학 전임 (원주 본원)",
         "전) 대성 학원 원장 (강남대 분원)",
         "전) 막강 학원 수학 원장",
-        "현) 로드맵 입시 관리형 독서실 원장",
+        "현) 로드맵 입시 관리형 독서실 N수관 원장",
       ],
       photo: "/images/about/원장T.jpg",
       accent: "bg-emerald-600",
@@ -34,7 +34,7 @@ export default function AboutTeacherPage() {
       careers: [
         "전) 대성 학원 부원장 (강남대 분원)",
         "전) 막강 학원 영어 원장",
-        "현) 로드맵 하이엔드 독서실 원장",
+        "현) 로드맵 입시 관리형 독서실 하이엔드관 원장",
       ],
       photo: "/images/about/부원장T_v2.jpg",
       accent: "bg-emerald-600",
@@ -90,7 +90,7 @@ export default function AboutTeacherPage() {
           {/* 상단 메인 타이틀 (관리시스템과 동일 스타일) */}
           <h2 className="motion-rise mb-20 mt-0 text-center text-3xl font-bold leading-tight text-gray-900 md:text-4xl">
             <span className="block">목표를 현실로 바꿔주는</span>
-            <span className="block">관리 선생님들을 소개합니다</span>
+            <span className="block">로드맵 매니지먼트 팀을 만나보세요</span>
           </h2>
 
           <div className="mx-auto max-w-4xl space-y-8">
