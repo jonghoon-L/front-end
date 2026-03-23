@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/v1/:path*",
+      "destination": "http://3.225.101.84:8080/v1/:path*"
+    }
+  ]
+}
