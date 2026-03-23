@@ -191,6 +191,7 @@ export default function ReservationPage() {
     try {
       const data = await submitWaitlist(payload);
       if (data.message) alert(data.message);
+      window.location.reload();
     } catch (err) {
       alert(err instanceof Error ? err.message : "등록 신청에 실패했습니다.");
     } finally {

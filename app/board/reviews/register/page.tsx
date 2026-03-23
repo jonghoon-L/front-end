@@ -121,7 +121,7 @@ export default function ReviewRegisterPage() {
         token: verificationToken,
       });
       alert(data?.message ?? "후기가 등록되었습니다. 검토 후 노출됩니다.");
-      window.location.href = "/board/reviews";
+      window.location.reload();
     } catch (err) {
       alert(err instanceof Error ? err.message : "후기 등록에 실패했습니다.");
     } finally {

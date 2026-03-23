@@ -184,6 +184,7 @@ export default function ConsultingPage() {
     try {
       const data = await submitConsultation(payload);
       if (data.message) alert(data.message);
+      window.location.reload();
     } catch (err) {
       alert(err instanceof Error ? err.message : "상담 신청에 실패했습니다.");
     } finally {
