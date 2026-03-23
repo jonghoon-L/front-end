@@ -4,34 +4,17 @@ import { useState } from "react";
 import Link from "next/link";
 import PageHero from "@/components/PageHero";
 import { useFadeIn } from "@/hooks/useFadeIn";
-import { apiPost, apiPostForm } from "@/api/apiClient";
-
-interface SendAuthResponse {
-  success: boolean;
-  message: string;
-}
-
-async function sendVerificationCode(phoneNumber: string): Promise<SendAuthResponse> {
-  const digitsOnly = phoneNumber.replace(/\D/g, "");
-  return apiPost<SendAuthResponse>("/v1/common/auth/send", { phoneNumber: digitsOnly });
-}
-
-interface VerifyAuthResponse {
-  success: boolean;
-  message: string;
-  verificationToken: string;
-}
-
-async function verifyAuthCode(phoneNumber: string, authCode: string): Promise<VerifyAuthResponse> {
-  const digitsOnly = phoneNumber.replace(/\D/g, "");
-  return apiPost<VerifyAuthResponse>("/v1/common/auth/verify", {
-    phoneNumber: digitsOnly,
-    authCode: authCode.trim(),
-  });
-}
+import { apiPost, AUTH_TOKEN_KEY } from "@/api/apiClient";
+import { sendVerificationCode, verifyAuthCode } from "@/api/auth";
 
 const MAX_IMAGES = 5;
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+interface SubmitReviewResponse {
+  success: boolean;
+  message: string;
+  reviewId?: number;
+}
 
 export default function ReviewRegisterPage() {
   const [title, setTitle] = useState("");
@@ -86,6 +69,7 @@ export default function ReviewRegisterPage() {
       setPhoneVerified(false);
       setVerificationCode("");
       setVerificationToken(null);
+      if (typeof window !== "undefined") localStorage.removeItem(AUTH_TOKEN_KEY);
       if (data.message) alert(data.message);
     } catch (err) {
       setSendCodeError(err instanceof Error ? err.message : "인증번호 발송에 실패했습니다.");
@@ -101,8 +85,10 @@ export default function ReviewRegisterPage() {
     setVerifyLoading(true);
     try {
       const data = await verifyAuthCode(phoneNumber.trim(), code);
-      setVerificationToken(data.verificationToken);
+      const token = data.verificationToken;
+      setVerificationToken(token);
       setPhoneVerified(true);
+      if (typeof window !== "undefined") localStorage.setItem(AUTH_TOKEN_KEY, token);
       if (data.message) alert(data.message);
     } catch (err) {
       setVerifyError(err instanceof Error ? err.message : "인증에 실패했습니다.");
@@ -125,14 +111,13 @@ export default function ReviewRegisterPage() {
 
     setIsSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.append("title", title.trim());
-      formData.append("content", content.trim());
-      formData.append("name", name.trim());
-      formData.append("phoneNumber", phoneNumber.replace(/\D/g, ""));
-      imageFiles.forEach((f) => formData.append("images", f));
+      const body: { title: string; content: string; name: string; imageUrls?: string[] } = {
+        title: title.trim(),
+        content: content.trim(),
+        name: name.trim(),
+      };
 
-      const data = await apiPostForm<{ message?: string }>("/v1/user/reviews", formData, {
+      const data = await apiPost<SubmitReviewResponse>("/v1/user/reviews", body, {
         token: verificationToken,
       });
       alert(data?.message ?? "후기가 등록되었습니다. 검토 후 노출됩니다.");
@@ -206,44 +191,42 @@ export default function ReviewRegisterPage() {
             />
           </div>
 
-          {/* 이미지 업로드 */}
+          {/* 이미지 (선택) - API는 S3 URL(imageUrls) 필요. 업로드 API 연동 전에는 미포함 */}
           <div>
             <h3 className="text-gray-900 font-medium text-base mb-2">사진 첨부 (선택)</h3>
             <hr className="border-gray-200 mb-4" />
-            <div className="space-y-3">
-              <div className="flex flex-wrap gap-3">
-                {imagePreviews.map((url, i) => (
-                  <div key={url} className="relative">
-                    <img
-                      src={url}
-                      alt={`미리보기 ${i + 1}`}
-                      className="h-28 w-28 object-cover rounded-lg border border-gray-200"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(i)}
-                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500 text-white text-sm flex items-center justify-center hover:bg-red-600"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-                {imagePreviews.length < MAX_IMAGES && (
-                  <label className="h-28 w-28 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 text-gray-500 hover:bg-gray-100 cursor-pointer text-sm">
-                    <span>+</span>
-                    <span>추가</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handleImageChange}
-                      className="hidden"
-                    />
-                  </label>
-                )}
-              </div>
-              <p className="text-sm text-gray-500">최대 {MAX_IMAGES}장, 5MB 이하 (jpg, png, gif)</p>
+            <div className="flex flex-wrap gap-3">
+              {imagePreviews.map((url, i) => (
+                <div key={url} className="relative">
+                  <img
+                    src={url}
+                    alt={`미리보기 ${i + 1}`}
+                    className="h-28 w-28 object-cover rounded-lg border border-gray-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImage(i)}
+                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500 text-white text-sm flex items-center justify-center hover:bg-red-600"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              {imagePreviews.length < MAX_IMAGES && (
+                <label className="h-28 w-28 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 text-gray-500 hover:bg-gray-100 cursor-pointer text-sm">
+                  <span>+</span>
+                  <span>추가</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                </label>
+              )}
             </div>
+            <p className="text-sm text-gray-500 mt-2">최대 {MAX_IMAGES}장, 5MB 이하 (업로드 API 연동 후 저장)</p>
           </div>
 
           {/* 이름, 휴대폰, 인증 */}

@@ -2,10 +2,28 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import PageHero from "@/components/PageHero";
-import { blurName } from "@/lib/blurName";
 import FadeInSection from "@/components/FadeInSection";
-import { getReviewPostById } from "../data";
+import { apiGet } from "@/api/apiClient";
 import { ArrowLeft, Eye } from "lucide-react";
+
+interface ReviewDetailResponse {
+  reviewId: number;
+  title: string;
+  content: string;
+  authorName: string;
+  imageUrls?: string[];
+  viewCount: number;
+  createdAt: string;
+}
+
+function formatCreatedAt(iso: string): string {
+  try {
+    const d = new Date(iso);
+    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
+  } catch {
+    return iso;
+  }
+}
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -15,17 +33,20 @@ type Props = {
 export default async function ReviewDetailPage({ params, searchParams }: Props) {
   const { id } = await params;
   const { from } = await searchParams;
-  const postId = Number(id);
+  const reviewId = Number(id);
 
-  if (!Number.isInteger(postId)) {
+  if (!Number.isInteger(reviewId)) {
     notFound();
   }
 
-  const post = getReviewPostById(postId);
-
-  if (!post) {
+  let post: ReviewDetailResponse;
+  try {
+    post = await apiGet<ReviewDetailResponse>(`/v1/common/reviews/${reviewId}`);
+  } catch {
     notFound();
   }
+
+  const contentLines = post.content.split(/\n/);
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-white">
@@ -46,13 +67,13 @@ export default async function ReviewDetailPage({ params, searchParams }: Props) 
               {post.title}
             </h1>
             <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-500">
-              <span className="font-medium text-slate-700">{post.authorDisplay ?? blurName(post.author)}</span>
+              <span className="font-medium text-slate-700">{post.authorName}</span>
               <span className="text-slate-300">·</span>
-              <span>{post.createdAt}</span>
+              <span>{formatCreatedAt(post.createdAt)}</span>
               <span className="text-slate-300">·</span>
               <span className="flex items-center gap-1.5">
                 <Eye className="h-4 w-4 text-slate-400" />
-                {post.views}
+                {post.viewCount}
               </span>
             </div>
           </header>
@@ -60,11 +81,11 @@ export default async function ReviewDetailPage({ params, searchParams }: Props) 
           {/* 본문 */}
           <div className="px-5 py-8 sm:px-8 sm:py-10 lg:px-10 lg:py-12">
             <div className="prose prose-slate max-w-none break-words text-slate-700">
-              {post.content.map((line, index) =>
-                line.length === 0 ? (
+              {contentLines.map((line, index) =>
+                line.trim() === "" ? (
                   <div key={`blank-${index}`} className="h-6" aria-hidden="true" />
                 ) : (
-                  <p key={`${line}-${index}`} className="mb-4 leading-[1.9] last:mb-0">
+                  <p key={`${index}-${line.slice(0, 30)}`} className="mb-4 leading-[1.9] last:mb-0">
                     {line}
                   </p>
                 )

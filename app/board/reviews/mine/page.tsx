@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { blurName } from "@/lib/blurName";
 import PageHero from "@/components/PageHero";
 import { Trash2 } from "lucide-react";
 import { useFadeIn } from "@/hooks/useFadeIn";
-import { apiPost, apiGet, apiDelete } from "@/api/apiClient";
+import { apiGet, apiDelete, AUTH_TOKEN_KEY } from "@/api/apiClient";
+import { sendVerificationCode, verifyAuthCode } from "@/api/auth";
 
 type ReviewStatus = "PENDING" | "APPROVED";
 
@@ -22,32 +22,9 @@ interface MyReviewsResponse {
   myReviews: MyReview[];
 }
 
-interface SendAuthResponse {
-  success: boolean;
-  message: string;
-}
-
-async function sendVerificationCode(phoneNumber: string): Promise<SendAuthResponse> {
-  const digitsOnly = phoneNumber.replace(/\D/g, "");
-  return apiPost<SendAuthResponse>("/v1/common/auth/send", { phoneNumber: digitsOnly });
-}
-
-interface VerifyAuthResponse {
-  success: boolean;
-  message: string;
-  verificationToken: string;
-}
-
-async function verifyAuthCode(phoneNumber: string, authCode: string): Promise<VerifyAuthResponse> {
-  const digitsOnly = phoneNumber.replace(/\D/g, "");
-  return apiPost<VerifyAuthResponse>("/v1/common/auth/verify", {
-    phoneNumber: digitsOnly,
-    authCode: authCode.trim(),
-  });
-}
-
-async function fetchMyReviews(verificationToken: string): Promise<MyReviewsResponse> {
-  return apiGet<MyReviewsResponse>("/v1/user/reviews/mine", { token: verificationToken });
+/** GET /v1/user/reviews/mine - token은 localStorage에 저장된 verificationToken을 apiClient가 전역으로 Authorization 헤더에 주입 */
+async function fetchMyReviews(): Promise<MyReviewsResponse> {
+  return apiGet<MyReviewsResponse>("/v1/user/reviews/mine", { skipUnauthorizedRedirect: true });
 }
 
 interface DeleteReviewResponse {
@@ -55,8 +32,8 @@ interface DeleteReviewResponse {
   message: string;
 }
 
-async function deleteReview(reviewId: number, verificationToken: string): Promise<DeleteReviewResponse> {
-  return apiDelete<DeleteReviewResponse>(`/v1/user/reviews/${reviewId}`, { token: verificationToken });
+async function deleteReview(reviewId: number): Promise<DeleteReviewResponse> {
+  return apiDelete<DeleteReviewResponse>(`/v1/user/reviews/${reviewId}`, { skipUnauthorizedRedirect: true });
 }
 
 function formatDate(iso: string): string {
@@ -117,6 +94,7 @@ export default function MyReviewsPage() {
       setVerificationCode("");
       setVerificationToken(null);
       setReviews(null);
+      if (typeof window !== "undefined") localStorage.removeItem(AUTH_TOKEN_KEY);
       if (data.message) alert(data.message);
     } catch (err) {
       setSendCodeError(err instanceof Error ? err.message : "인증번호 발송에 실패했습니다.");
@@ -132,8 +110,10 @@ export default function MyReviewsPage() {
     setVerifyLoading(true);
     try {
       const data = await verifyAuthCode(phoneNumber.trim(), code);
-      setVerificationToken(data.verificationToken);
+      const token = data.verificationToken;
+      setVerificationToken(token);
       setPhoneVerified(true);
+      if (typeof window !== "undefined") localStorage.setItem(AUTH_TOKEN_KEY, token);
       if (data.message) alert(data.message);
     } catch (err) {
       setVerifyError(err instanceof Error ? err.message : "인증에 실패했습니다.");
@@ -147,7 +127,7 @@ export default function MyReviewsPage() {
     setError(null);
     setLoading(true);
     try {
-      const data = await fetchMyReviews(verificationToken);
+      const data = await fetchMyReviews();
       setReviews(data.myReviews ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "목록을 불러오지 못했습니다.");
@@ -166,7 +146,7 @@ export default function MyReviewsPage() {
     }
     setDeletingId(reviewId);
     try {
-      await deleteReview(reviewId, verificationToken);
+      await deleteReview(reviewId);
       setReviews((prev) => (prev ?? []).filter((r) => r.reviewId !== reviewId));
       alert("후기가 삭제되었습니다.");
     } catch (err) {
@@ -369,7 +349,7 @@ export default function MyReviewsPage() {
                         </Link>
                       </td>
                       <td className="px-6 py-4 text-center text-sm text-slate-500">
-                        {blurName(item.authorName)}
+                        {item.authorName}
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex justify-center">

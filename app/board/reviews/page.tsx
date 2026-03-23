@@ -1,19 +1,52 @@
 "use client";
 
-import { useState, useMemo, useEffect, useLayoutEffect, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 import PageHero from "@/components/PageHero";
-import { reviewPosts } from "./data";
-import { blurName } from "@/lib/blurName";
+import { apiGet } from "@/api/apiClient";
 import { ChevronLeft, ChevronRight, Pin, Pencil } from "lucide-react";
 import { useFadeIn } from "@/hooks/useFadeIn";
 
-const ITEMS_PER_PAGE = 10;
+interface ReviewItem {
+  reviewId: number;
+  title: string;
+  authorName: string;
+  viewCount: number;
+  createdAt: string;
+  isTop: boolean;
+}
+
+interface ReviewsListResponse {
+  currentPage: number;
+  totalPages: number;
+  reviews: ReviewItem[];
+}
+
+function formatCreatedAt(iso: string): string {
+  try {
+    const d = new Date(iso);
+    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
+  } catch {
+    return iso;
+  }
+}
 
 export default function ReviewsPage() {
   const [currentPage, setCurrentPage] = useState(1);
+  const [data, setData] = useState<ReviewsListResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const fade = useFadeIn(0.1);
   const contentTopRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    apiGet<ReviewsListResponse>(`/v1/common/reviews?page=${currentPage}`)
+      .then((res) => setData(res))
+      .catch((err) => setError(err instanceof Error ? err.message : "목록을 불러오지 못했습니다."))
+      .finally(() => setLoading(false));
+  }, [currentPage]);
 
   useLayoutEffect(() => {
     const scrollToTop = () => {
@@ -35,22 +68,8 @@ export default function ReviewsPage() {
     contentTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [currentPage]);
 
-  const filteredAndSortedPosts = useMemo(() => {
-    const list = [...reviewPosts];
-    list.sort((a, b) => {
-      const aTop = a.isTop ? 1 : 0;
-      const bTop = b.isTop ? 1 : 0;
-      if (aTop !== bTop) return bTop - aTop;
-      return b.createdAt.localeCompare(a.createdAt);
-    });
-    return list;
-  }, []);
-
-  const totalPages = Math.max(1, Math.ceil(filteredAndSortedPosts.length / ITEMS_PER_PAGE));
-  const pagedPosts = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredAndSortedPosts.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredAndSortedPosts, currentPage]);
+  const pagedPosts = data?.reviews ?? [];
+  const totalPages = data?.totalPages ?? 1;
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-white">
@@ -91,15 +110,27 @@ export default function ReviewsPage() {
             transitionDelay: fade.isVisible ? "180ms" : "0ms",
           }}
         >
-          {pagedPosts.map((post, index) => {
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-16 text-slate-500">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
+              <p className="mt-4 text-sm">목록을 불러오는 중…</p>
+            </div>
+          ) : error ? (
+            <div className="rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-slate-200/60">
+              <p className="text-red-600">{error}</p>
+            </div>
+          ) : pagedPosts.length === 0 ? (
+            <div className="rounded-2xl bg-white p-12 text-center shadow-sm ring-1 ring-slate-200/60">
+              <p className="text-slate-500">등록된 후기가 없습니다.</p>
+            </div>
+          ) : (
+          pagedPosts.map((post, index) => {
             const isPinned = post.isTop;
-            const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-            const totalRegular = filteredAndSortedPosts.filter((p) => !p.isTop).length;
-            const regularNum = totalRegular - filteredAndSortedPosts.slice(0, fullIndex).filter((p) => !p.isTop).length;
+            const regularNum = (currentPage - 1) * 10 + index + 1;
             return (
               <Link
-                key={post.id}
-                href={`/board/reviews/${post.id}`}
+                key={post.reviewId}
+                href={`/board/reviews/${post.reviewId}`}
                 className={`block rounded-2xl p-5 transition-shadow hover:shadow-md active:scale-[0.99] ${
                   isPinned
                     ? "bg-slate-100 shadow-sm ring-1 ring-slate-300/80"
@@ -122,16 +153,17 @@ export default function ReviewsPage() {
                       {post.title}
                     </h3>
                     <div className={`mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs ${isPinned ? "font-semibold text-slate-700" : "text-slate-500"}`}>
-                      <span>{post.authorDisplay ?? blurName(post.author)}</span>
-                      <span>{post.createdAt}</span>
-                      <span>조회 {post.views}</span>
+                      <span>{post.authorName}</span>
+                      <span>{formatCreatedAt(post.createdAt)}</span>
+                      <span>조회 {post.viewCount}</span>
                     </div>
                   </div>
                   <ChevronRight className="h-5 w-5 shrink-0 text-slate-300" />
                 </div>
               </Link>
             );
-          })}
+          })
+          )}
         </div>
 
         {/* 데스크톱: 테이블 */}
@@ -165,14 +197,30 @@ export default function ReviewsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {pagedPosts.map((post, index) => {
+                {loading ? (
+                  <tr>
+                    <td colSpan={5} className="px-8 py-16 text-center text-slate-500">
+                      <div className="inline-flex flex-col items-center gap-2">
+                        <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
+                        <span>목록을 불러오는 중…</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : error ? (
+                  <tr>
+                    <td colSpan={5} className="px-8 py-16 text-center text-red-600">{error}</td>
+                  </tr>
+                ) : pagedPosts.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-8 py-16 text-center text-slate-500">등록된 후기가 없습니다.</td>
+                  </tr>
+                ) : (
+                pagedPosts.map((post, index) => {
                   const isPinned = post.isTop;
-                  const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-                  const totalRegular = filteredAndSortedPosts.filter((p) => !p.isTop).length;
-                  const regularNum = totalRegular - filteredAndSortedPosts.slice(0, fullIndex).filter((p) => !p.isTop).length;
+                  const regularNum = (currentPage - 1) * 10 + index + 1;
                   return (
                     <tr
-                      key={post.id}
+                      key={post.reviewId}
                       className={`group transition-colors ${
                         isPinned ? "bg-slate-100 hover:bg-slate-200/80" : "hover:bg-slate-50/70"
                       }`}
@@ -189,7 +237,7 @@ export default function ReviewsPage() {
                       </td>
                       <td className="px-8 py-5">
                         <Link
-                          href={`/board/reviews/${post.id}`}
+                          href={`/board/reviews/${post.reviewId}`}
                           className={`inline-flex items-center gap-1 text-base ${
                             isPinned ? "font-bold text-slate-900" : "font-medium text-slate-800"
                           }`}
@@ -198,19 +246,20 @@ export default function ReviewsPage() {
                           <ChevronRight className="h-4 w-4 shrink-0 opacity-0 transition-opacity group-hover:opacity-100" />
                         </Link>
                       </td>
-                      <td className={`px-8 py-5 text-center text-base ${isPinned ? "font-semibold text-slate-800" : "text-slate-500"}`}>{post.authorDisplay ?? blurName(post.author)}</td>
-                      <td className={`px-8 py-5 text-center text-base ${isPinned ? "font-semibold text-slate-800" : "text-slate-500"}`}>{post.createdAt}</td>
-                      <td className={`px-8 py-5 text-center text-base ${isPinned ? "font-semibold text-slate-800" : "text-slate-400"}`}>{post.views}</td>
+                      <td className={`px-8 py-5 text-center text-base ${isPinned ? "font-semibold text-slate-800" : "text-slate-500"}`}>{post.authorName}</td>
+                      <td className={`px-8 py-5 text-center text-base ${isPinned ? "font-semibold text-slate-800" : "text-slate-500"}`}>{formatCreatedAt(post.createdAt)}</td>
+                      <td className={`px-8 py-5 text-center text-base ${isPinned ? "font-semibold text-slate-800" : "text-slate-400"}`}>{post.viewCount}</td>
                     </tr>
                   );
-                })}
+                })
+                )}
               </tbody>
             </table>
           </div>
         </div>
 
         {/* 페이지네이션 */}
-        {totalPages > 1 && (
+        {!loading && !error && totalPages > 1 && (
           <div
             className="transition-all duration-700 ease-out"
             style={{

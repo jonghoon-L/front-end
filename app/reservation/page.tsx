@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { apiPost } from "@/api/apiClient";
+import { apiPost, AUTH_TOKEN_KEY } from "@/api/apiClient";
+import { sendVerificationCode, verifyAuthCode } from "@/api/auth";
 import { Info } from "lucide-react";
 
 type Season = "SEMESTER_1" | "SEMESTER_2" | "SUMMER" | "WINTER";
@@ -19,30 +20,6 @@ const BRANCH_OPTIONS: { value: Branch; label: string }[] = [
   { value: "Hi-end", label: "하이엔드관" },
 ];
 
-interface SendAuthResponse {
-  success: boolean;
-  message: string;
-}
-
-async function sendVerificationCode(phoneNumber: string): Promise<SendAuthResponse> {
-  const digitsOnly = phoneNumber.replace(/\D/g, "");
-  return apiPost<SendAuthResponse>("/v1/common/auth/send", { phoneNumber: digitsOnly });
-}
-
-interface VerifyAuthResponse {
-  success: boolean;
-  message: string;
-  verificationToken: string;
-}
-
-async function verifyAuthCode(phoneNumber: string, authCode: string): Promise<VerifyAuthResponse> {
-  const digitsOnly = phoneNumber.replace(/\D/g, "");
-  return apiPost<VerifyAuthResponse>("/v1/common/auth/verify", {
-    phoneNumber: digitsOnly,
-    authCode: authCode.trim(),
-  });
-}
-
 interface SubmitWaitlistResponse {
   success: boolean;
   message: string;
@@ -50,6 +27,7 @@ interface SubmitWaitlistResponse {
   registeredAt?: string;
 }
 
+/** POST /v1/user/waitlists - token은 localStorage의 verificationToken을 apiClient가 Authorization 헤더에 자동 주입 */
 async function submitWaitlist(
   payload: {
     branch: string | null;
@@ -59,8 +37,7 @@ async function submitWaitlist(
     age?: number;
     school?: string;
     grade?: string;
-  },
-  verificationToken: string
+  }
 ): Promise<SubmitWaitlistResponse> {
   const body: Record<string, unknown> = {
     season: payload.season,
@@ -77,7 +54,7 @@ async function submitWaitlist(
     body.school = payload.school.trim();
     if (payload.grade) body.grade = payload.grade;
   }
-  return apiPost<SubmitWaitlistResponse>("/v1/user/waitlists", body, { token: verificationToken });
+  return apiPost<SubmitWaitlistResponse>("/v1/user/waitlists", body, { skipUnauthorizedRedirect: true });
 }
 
 const needsBranch = (season: Season) => season === "SEMESTER_1" || season === "SEMESTER_2";
@@ -122,6 +99,7 @@ export default function ReservationPage() {
       setPhoneVerified(false);
       setVerificationCode("");
       setVerificationToken(null);
+      if (typeof window !== "undefined") localStorage.removeItem(AUTH_TOKEN_KEY);
       if (data.message) alert(data.message);
     } catch (err) {
       setSendCodeError(err instanceof Error ? err.message : "인증번호 발송에 실패했습니다.");
@@ -137,8 +115,10 @@ export default function ReservationPage() {
     setVerifyLoading(true);
     try {
       const data = await verifyAuthCode(phoneNumber.trim(), code);
-      setVerificationToken(data.verificationToken);
+      const token = data.verificationToken;
+      setVerificationToken(token);
       setPhoneVerified(true);
+      if (typeof window !== "undefined") localStorage.setItem(AUTH_TOKEN_KEY, token);
       if (data.message) alert(data.message);
     } catch (err) {
       setVerifyError(err instanceof Error ? err.message : "인증에 실패했습니다.");
@@ -209,7 +189,7 @@ export default function ReservationPage() {
 
     setIsSubmitting(true);
     try {
-      const data = await submitWaitlist(payload, verificationToken);
+      const data = await submitWaitlist(payload);
       if (data.message) alert(data.message);
     } catch (err) {
       alert(err instanceof Error ? err.message : "등록 신청에 실패했습니다.");

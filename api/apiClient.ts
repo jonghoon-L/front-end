@@ -6,8 +6,10 @@
  * - JWT: token 옵션 또는 localStorage에서 자동 주입 (로그인 연동 대비)
  *
  * 환경별 동작:
- * - 로컬(localhost): NEXT_PUBLIC_API_BASE_URL(예: http://3.225.101.84:8080)로 직접 요청
- * - Vercel 배포: 현재 도메인(예: https://www.roadmap-edu.kr)으로 요청 → vercel.json Rewrite 적용
+ * - NEXT_PUBLIC_API_BASE_URL이 있으면 해당 URL로 요청
+ * - 없으면 window.location.origin 사용 (브라우저 환경)
+ *
+ * Vercel 배포 시: 프로젝트 환경 변수에 NEXT_PUBLIC_API_BASE_URL 설정
  */
 
 /** 경로 정규화: v1/admin/login 또는 /v1/admin/login → 항상 /v1/admin/login 형태 */
@@ -17,14 +19,12 @@ function normalizePath(path: string): string {
   return "/" + withoutLeading;
 }
 
-/** Base URL 결정: env에 값이 있으면 사용, 없으면 현재 도메인(브라우저) 또는 빈 문자열(SSR) */
+/** Base URL 결정: .env의 NEXT_PUBLIC_API_BASE_URL 사용 */
 function getApiBaseUrl(): string {
   if (typeof process === "undefined") return "";
   const envBase = (process.env.NEXT_PUBLIC_API_BASE_URL ?? "").trim().replace(/\/$/, "");
   if (envBase) return envBase;
-  if (typeof window !== "undefined") {
-    return window.location.origin;
-  }
+  if (typeof window !== "undefined") return window.location.origin;
   return "";
 }
 

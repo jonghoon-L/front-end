@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import ConsultationCalendar from "@/components/ConsultationCalendar";
 import { getAvailableTimeSlots } from "@/lib/consultationSlots";
-import { apiPost } from "@/api/apiClient";
+import { apiPost, AUTH_TOKEN_KEY } from "@/api/apiClient";
+import { sendVerificationCode, verifyAuthCode } from "@/api/auth";
+import { fetchUnavailableSchedules } from "@/api/consultations";
 
 type Branch = "N" | "Hi-end";
 
@@ -11,32 +13,6 @@ const BRANCH_OPTIONS: { value: Branch; label: string }[] = [
   { value: "N", label: "N수생관" },
   { value: "Hi-end", label: "하이엔드관" },
 ];
-
-/** 인증번호 발송 API 응답 */
-interface SendAuthResponse {
-  success: boolean;
-  message: string;
-}
-
-async function sendVerificationCode(phoneNumber: string): Promise<SendAuthResponse> {
-  const digitsOnly = phoneNumber.replace(/\D/g, "");
-  return apiPost<SendAuthResponse>("/v1/common/auth/send", { phoneNumber: digitsOnly });
-}
-
-/** 인증 검증 API 응답 */
-interface VerifyAuthResponse {
-  success: boolean;
-  message: string;
-  verificationToken: string;
-}
-
-async function verifyAuthCode(phoneNumber: string, authCode: string): Promise<VerifyAuthResponse> {
-  const digitsOnly = phoneNumber.replace(/\D/g, "");
-  return apiPost<VerifyAuthResponse>("/v1/common/auth/verify", {
-    phoneNumber: digitsOnly,
-    authCode: authCode.trim(),
-  });
-}
 
 /** 상담 등록 API 응답 */
 interface SubmitConsultationResponse {
@@ -46,6 +22,7 @@ interface SubmitConsultationResponse {
   registeredAt?: string;
 }
 
+/** POST /v1/user/consultations - token은 localStorage의 verificationToken을 apiClient가 Authorization 헤더에 자동 주입 */
 async function submitConsultation(
   payload: {
     branch: Branch;
@@ -53,8 +30,7 @@ async function submitConsultation(
     time: string;
     name: string;
     phoneNumber: string;
-  } & ({ age: number } | { school: string; grade: string }),
-  verificationToken: string
+  } & ({ age: number } | { school: string; grade: string })
 ): Promise<SubmitConsultationResponse> {
   return apiPost<SubmitConsultationResponse>(
     "/v1/user/consultations",
@@ -62,7 +38,7 @@ async function submitConsultation(
       ...payload,
       phoneNumber: payload.phoneNumber.replace(/\D/g, ""),
     },
-    { token: verificationToken }
+    { skipUnauthorizedRedirect: true }
   );
 }
 
@@ -93,23 +69,56 @@ export default function ConsultingPage() {
   const [verificationToken, setVerificationToken] = useState<string | null>(null);
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [verifyError, setVerifyError] = useState<string | null>(null);
+  const [scheduleData, setScheduleData] = useState<{
+    branch: Branch;
+    yearMonth: string;
+    bookedByDate: Record<string, string[]>;
+  } | null>(null);
+  const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [scheduleError, setScheduleError] = useState<string | null>(null);
 
-  const timeSlots = useMemo(() => {
+  const yearMonthStr = useMemo(() => {
+    const y = calendarMonth.getFullYear();
+    const m = String(calendarMonth.getMonth() + 1).padStart(2, "0");
+    return `${y}-${m}`;
+  }, [calendarMonth]);
+
+  useEffect(() => {
+    if (!branch) {
+      setScheduleData(null);
+      return;
+    }
+    setScheduleLoading(true);
+    setScheduleError(null);
+    fetchUnavailableSchedules(branch, yearMonthStr)
+      .then((res) => {
+        const bookedByDate: Record<string, string[]> = {};
+        for (const item of res.unavailableSchedules ?? []) {
+          const times = item.bookedTimes ?? item.unavailableTimes ?? [];
+          bookedByDate[item.date] = times;
+        }
+        setScheduleData({ branch, yearMonth: res.yearMonth, bookedByDate });
+      })
+      .catch((err) => setScheduleError(err instanceof Error ? err.message : "스케줄을 불러오지 못했습니다."))
+      .finally(() => setScheduleLoading(false));
+  }, [branch, yearMonthStr]);
+
+  const allTimeSlots = useMemo(() => {
     if (!selectedDate || !branch) return [];
     const d = new Date(selectedDate + "T12:00:00");
     return getAvailableTimeSlots(branch, d);
   }, [selectedDate, branch]);
 
-  const morningSlots = useMemo(
-    () => timeSlots.filter((t) => t < "12:00"),
-    [timeSlots]
-  );
-  const afternoonSlots = useMemo(
-    () => timeSlots.filter((t) => t >= "12:00"),
-    [timeSlots]
-  );
+  const bookedTimes = useMemo(() => {
+    if (!selectedDate || !scheduleData || scheduleData.yearMonth !== yearMonthStr) return [];
+    return scheduleData.bookedByDate[selectedDate] ?? [];
+  }, [selectedDate, scheduleData, yearMonthStr]);
 
-  const hasSlots = selectedDate && timeSlots.length > 0;
+  const morningSlots = useMemo(() => allTimeSlots.filter((t) => t < "12:00"), [allTimeSlots]);
+  const afternoonSlots = useMemo(() => allTimeSlots.filter((t) => t >= "12:00"), [allTimeSlots]);
+
+  const hasSlots = selectedDate && allTimeSlots.length > 0;
+  const hasAvailableSlots = allTimeSlots.some((t) => !bookedTimes.includes(t));
 
   const handleMonthChange = (date: Date) => {
     setCalendarMonth(date);
@@ -128,6 +137,7 @@ export default function ConsultingPage() {
       setPhoneVerified(false);
       setVerificationCode("");
       setVerificationToken(null);
+      if (typeof window !== "undefined") localStorage.removeItem(AUTH_TOKEN_KEY);
       if (data.message) alert(data.message);
     } catch (err) {
       setSendCodeError(err instanceof Error ? err.message : "인증번호 발송에 실패했습니다.");
@@ -143,8 +153,10 @@ export default function ConsultingPage() {
     setVerifyLoading(true);
     try {
       const data = await verifyAuthCode(phoneNumber.trim(), code);
-      setVerificationToken(data.verificationToken);
+      const token = data.verificationToken;
+      setVerificationToken(token);
       setPhoneVerified(true);
+      if (typeof window !== "undefined") localStorage.setItem(AUTH_TOKEN_KEY, token);
       if (data.message) alert(data.message);
     } catch (err) {
       setVerifyError(err instanceof Error ? err.message : "인증에 실패했습니다.");
@@ -170,7 +182,7 @@ export default function ConsultingPage() {
     };
     setIsSubmitting(true);
     try {
-      const data = await submitConsultation(payload, verificationToken);
+      const data = await submitConsultation(payload);
       if (data.message) alert(data.message);
     } catch (err) {
       alert(err instanceof Error ? err.message : "상담 신청에 실패했습니다.");
@@ -222,6 +234,11 @@ export default function ConsultingPage() {
             <h3 className="text-gray-900 font-medium text-base mb-2">상담을 원하는 시간을 선택해주세요</h3>
             <hr className="border-gray-200 mb-4" />
 
+            {scheduleError && (
+              <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+                {scheduleError}
+              </div>
+            )}
             {/* 캘린더 */}
             <div className="mb-4">
               <ConsultationCalendar
@@ -234,6 +251,9 @@ export default function ConsultingPage() {
                 }}
                 disablePastDates={true}
               />
+              {scheduleLoading && branch && (
+                <p className="mt-2 text-sm text-gray-500">스케줄 불러오는 중…</p>
+              )}
             </div>
 
             {selectedDate && !hasSlots && (
@@ -258,6 +278,9 @@ export default function ConsultingPage() {
 
             {selectedDate && hasSlots && (
               <div className="rounded-none border border-gray-200 p-5">
+                {!hasAvailableSlots && (
+                  <p className="mb-4 text-sm text-amber-600">이 날은 모든 시간이 예약되었어요. 다른 날을 선택해 주세요. 😊</p>
+                )}
                 <div className="space-y-5">
                   {morningSlots.length > 0 && (
                     <div>
@@ -265,15 +288,19 @@ export default function ConsultingPage() {
                       <div className="grid grid-cols-4 gap-3">
                         {morningSlots.map((t) => {
                           const isSelected = selectedTime === t;
+                          const isBooked = bookedTimes.includes(t);
                           return (
                             <button
                               key={t}
                               type="button"
-                              onClick={() => setSelectedTime(t)}
-                              className={`py-3 rounded-2xl text-base border transition-colors cursor-pointer ${
-                                isSelected
-                                  ? "border-slate-800 bg-slate-800 text-white hover:bg-slate-700"
-                                  : "border-gray-200 bg-gray-200 text-gray-800 hover:bg-gray-300"
+                              disabled={isBooked}
+                              onClick={() => !isBooked && setSelectedTime(t)}
+                              className={`py-3 rounded-2xl text-base border transition-colors ${
+                                isBooked
+                                  ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
+                                  : isSelected
+                                    ? "cursor-pointer border-slate-800 bg-slate-800 text-white hover:bg-slate-700"
+                                    : "cursor-pointer border-gray-200 bg-gray-200 text-gray-800 hover:bg-gray-300"
                               }`}
                             >
                               {t}
@@ -289,15 +316,19 @@ export default function ConsultingPage() {
                       <div className="grid grid-cols-4 gap-3">
                         {afternoonSlots.map((t) => {
                           const isSelected = selectedTime === t;
+                          const isBooked = bookedTimes.includes(t);
                           return (
                             <button
                               key={t}
                               type="button"
-                              onClick={() => setSelectedTime(t)}
-                              className={`py-3 rounded-2xl text-base border transition-colors cursor-pointer ${
-                                isSelected
-                                  ? "border-slate-800 bg-slate-800 text-white hover:bg-slate-700"
-                                  : "border-gray-200 bg-gray-200 text-gray-800 hover:bg-gray-300"
+                              disabled={isBooked}
+                              onClick={() => !isBooked && setSelectedTime(t)}
+                              className={`py-3 rounded-2xl text-base border transition-colors ${
+                                isBooked
+                                  ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
+                                  : isSelected
+                                    ? "cursor-pointer border-slate-800 bg-slate-800 text-white hover:bg-slate-700"
+                                    : "cursor-pointer border-gray-200 bg-gray-200 text-gray-800 hover:bg-gray-300"
                               }`}
                             >
                               {t}
