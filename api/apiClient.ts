@@ -1,15 +1,13 @@
 /**
  * 공통 fetch 래퍼 - 백엔드 API 호출 시 일관된 설정 적용
- * - Base URL: .env의 NEXT_PUBLIC_API_BASE_URL 사용 (로컬) 또는 현재 도메인 (Vercel)
  * - Content-Type: application/json 기본 (FormData 사용 시 제외)
  * - credentials: 'include' (CORS + 쿠키/인증 정보)
- * - JWT: token 옵션 또는 localStorage에서 자동 주입 (로그인 연동 대비)
+ * - JWT: token 옵션 또는 localStorage에서 자동 주입
  *
- * 환경별 동작:
- * - NEXT_PUBLIC_API_BASE_URL이 있으면 해당 URL로 요청
- * - 없으면 window.location.origin 사용 (브라우저 환경)
- *
- * Vercel 배포 시: 프로젝트 환경 변수에 NEXT_PUBLIC_API_BASE_URL 설정
+ * URL 결정:
+ * - development: 항상 http://3.225.101.84:8080 + 경로 (배포 백엔드 직접 호출, Next 404 방지)
+ * - production + useRelativePath: 상대 경로 /v1/... (Vercel 프록시)
+ * - 그 외 production: NEXT_PUBLIC_API_BASE_URL 또는 window.location.origin + 경로
  */
 
 /** 경로 정규화: v1/admin/login 또는 /v1/admin/login → 항상 /v1/admin/login 형태 */
@@ -33,6 +31,12 @@ function buildApiUrl(baseUrl: string, path: string): string {
   const normalizedPath = normalizePath(path);
   const base = baseUrl.replace(/\/+$/, "");
   return base + normalizedPath;
+}
+
+const DEV_API_ORIGIN = "http://3.225.101.84:8080";
+
+function isDevelopment(): boolean {
+  return process.env.NODE_ENV === "development";
 }
 
 /** localStorage에 저장할 토큰 키 (로그인 연동 시 사용) */
@@ -66,6 +70,11 @@ export interface ApiRequestOptions extends Omit<RequestInit, "headers" | "body">
   body?: Record<string, unknown> | FormData | null;
   /** 401 시 로그인 페이지 리다이렉트 건너뛰기 (로그인 API 등에서 사용 - 에러를 throw하여 호출부에서 처리) */
   skipUnauthorizedRedirect?: boolean;
+  /**
+   * production에서만 적용: 브라우저에서 상대 경로로 요청 (예: /v1/... → Vercel 프록시).
+   * development에서는 무시되며 http://3.225.101.84:8080 으로 고정됩니다.
+   */
+  useRelativePath?: boolean;
 }
 
 /**
@@ -75,14 +84,15 @@ export interface ApiRequestOptions extends Omit<RequestInit, "headers" | "body">
  * @returns 파싱된 응답 데이터 (JSON)
  */
 export async function apiClient<T = unknown>(path: string, options: ApiRequestOptions = {}): Promise<T> {
-  const baseUrl = getApiBaseUrl();
-  if (!baseUrl) {
-    throw new Error(
-      "API 주소를 알 수 없습니다. 브라우저 환경에서는 현재 도메인을 사용하고, 서버 환경에서는 .env에 NEXT_PUBLIC_API_BASE_URL을 설정해 주세요."
-    );
-  }
-
-  const { token, headers: customHeaders = {}, body: bodyInput, method = "GET", skipUnauthorizedRedirect, ...rest } = options;
+  const {
+    token,
+    headers: customHeaders = {},
+    body: bodyInput,
+    method = "GET",
+    skipUnauthorizedRedirect,
+    useRelativePath,
+    ...rest
+  } = options;
 
   const tokenToUse = resolveToken(token);
   const isFormData = bodyInput instanceof FormData;
@@ -102,7 +112,22 @@ export async function apiClient<T = unknown>(path: string, options: ApiRequestOp
 
   const body = isFormData ? bodyInput : bodyInput && typeof bodyInput === "object" ? JSON.stringify(bodyInput) : undefined;
 
-  const url = buildApiUrl(baseUrl, path);
+  const normalizedPath = normalizePath(path);
+  let url: string;
+
+  if (isDevelopment()) {
+    url = `${DEV_API_ORIGIN.replace(/\/+$/, "")}${normalizedPath}`;
+  } else if (Boolean(useRelativePath) && typeof window !== "undefined") {
+    url = normalizedPath;
+  } else {
+    const baseUrl = getApiBaseUrl();
+    if (!baseUrl) {
+      throw new Error(
+        "API 주소를 알 수 없습니다. 브라우저 환경에서는 현재 도메인을 사용하고, 서버 환경에서는 .env에 NEXT_PUBLIC_API_BASE_URL을 설정해 주세요."
+      );
+    }
+    url = buildApiUrl(baseUrl, path);
+  }
 
   const res = await fetch(url, {
     ...rest,
