@@ -1,4 +1,4 @@
-import { apiGet, apiPatch } from "@/api/apiClient";
+import { apiDelete, apiGet, apiPatch } from "@/api/apiClient";
 
 export type WaitlistSeason = "SEMESTER_1" | "SEMESTER_2" | "SUMMER" | "WINTER";
 
@@ -70,6 +70,28 @@ export async function patchAdminWaitlistStatus(
   return apiPatch<PatchWaitlistStatusResponse | null>(
     `/v1/admin/waitlists/${waitlistId}/status`,
     { status },
+    {
+      useRelativePath: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+}
+
+export interface DeleteWaitlistResponse {
+  success: boolean;
+  message?: string;
+}
+
+/**
+ * DELETE /v1/admin/waitlists/{waitlistId}
+ */
+export async function deleteAdminWaitlist(
+  waitlistId: number
+): Promise<DeleteWaitlistResponse | null> {
+  return apiDelete<DeleteWaitlistResponse | null>(
+    `/v1/admin/waitlists/${waitlistId}`,
     {
       useRelativePath: true,
       headers: {

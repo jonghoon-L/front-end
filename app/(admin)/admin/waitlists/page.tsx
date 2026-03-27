@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Bell, Loader2, Trash2, Users } from "lucide-react";
 import {
+  deleteAdminWaitlist,
   fetchAdminWaitlists,
   patchAdminWaitlistStatus,
   type Waitlist,
@@ -93,6 +94,9 @@ export default function WaitlistsPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedStudentForDelete, setSelectedStudentForDelete] =
     useState<Waitlist | null>(null);
+  const [deletingWaitlistId, setDeletingWaitlistId] = useState<number | null>(
+    null
+  );
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastExiting, setToastExiting] = useState(false);
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -170,13 +174,36 @@ export default function WaitlistsPage() {
   };
 
   const closeDeleteModal = () => {
+    if (deletingWaitlistId !== null) return;
     setIsDeleteModalOpen(false);
     setSelectedStudentForDelete(null);
   };
 
-  const handleConfirmDelete = () => {
-    console.log("삭제 API 호출 예정");
-    closeDeleteModal();
+  const handleConfirmDelete = async () => {
+    if (!selectedStudentForDelete) return;
+    const id = selectedStudentForDelete.waitlistId;
+    setDeletingWaitlistId(id);
+    try {
+      const data = await deleteAdminWaitlist(id);
+
+      if (data && data.success === false) {
+        alert(data.message ?? "삭제에 실패했습니다.");
+        return;
+      }
+
+      showToast(
+        data?.message ?? "성공적으로 삭제되었습니다."
+      );
+      setIsDeleteModalOpen(false);
+      setSelectedStudentForDelete(null);
+      await loadWaitlists({ silent: true });
+    } catch (e) {
+      alert(
+        e instanceof Error ? e.message : "삭제 요청에 실패했습니다."
+      );
+    } finally {
+      setDeletingWaitlistId(null);
+    }
   };
 
   const handleConfirmStatusChange = async () => {
@@ -252,7 +279,8 @@ export default function WaitlistsPage() {
               loadState === "loading" ||
               modalOpen ||
               isDeleteModalOpen ||
-              updatingWaitlistId !== null
+              updatingWaitlistId !== null ||
+              deletingWaitlistId !== null
             }
             className={`
               flex-1 min-w-0 cursor-pointer rounded-md px-4 py-2.5 text-sm font-medium
@@ -331,7 +359,8 @@ export default function WaitlistsPage() {
                 const rowBusy =
                   updatingWaitlistId === item.waitlistId ||
                   modalOpen ||
-                  isDeleteModalOpen;
+                  isDeleteModalOpen ||
+                  deletingWaitlistId === item.waitlistId;
                 return (
                   <tr
                     key={item.waitlistId}
@@ -488,15 +517,17 @@ export default function WaitlistsPage() {
             <div className="mt-6 flex gap-3">
               <button
                 type="button"
-                onClick={handleConfirmDelete}
-                className="flex-1 cursor-pointer rounded-xl bg-slate-800 px-4 py-3 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-slate-700 active:scale-[0.98]"
+                onClick={() => void handleConfirmDelete()}
+                disabled={deletingWaitlistId !== null}
+                className="flex-1 cursor-pointer rounded-xl bg-slate-800 px-4 py-3 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:bg-slate-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                확인
+                {deletingWaitlistId !== null ? "처리 중…" : "확인"}
               </button>
               <button
                 type="button"
                 onClick={closeDeleteModal}
-                className="flex-1 cursor-pointer rounded-xl bg-gray-100 px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-gray-200 active:scale-[0.98]"
+                disabled={deletingWaitlistId !== null}
+                className="flex-1 cursor-pointer rounded-xl bg-gray-100 px-4 py-3 text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-gray-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 닫기
               </button>
