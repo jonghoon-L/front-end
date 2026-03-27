@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import PageHero from "@/components/PageHero";
 import FadeInSection from "@/components/FadeInSection";
 import { apiGet } from "@/api/apiClient";
+import { maskName } from "@/lib/maskName";
 import { ArrowLeft, Eye } from "lucide-react";
 
 interface ReviewDetailResponse {
@@ -67,7 +68,7 @@ export default async function ReviewDetailPage({ params, searchParams }: Props) 
               {post.title}
             </h1>
             <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-500">
-              <span className="font-medium text-slate-700">{post.authorName}</span>
+              <span className="font-medium text-slate-700">{maskName(post.authorName)}</span>
               <span className="text-slate-300">·</span>
               <span>{formatCreatedAt(post.createdAt)}</span>
               <span className="text-slate-300">·</span>

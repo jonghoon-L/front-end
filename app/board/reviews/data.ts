@@ -4,7 +4,7 @@ export type ReviewPost = {
   branch: string;
   title: string;
   author: string;
-  /** 표시할 이름 (지정 시 blurName 대신 사용) */
+  /** 표시할 이름 (지정 시 maskName 대신 사용) */
   authorDisplay?: string;
   createdAt: string;
   views: number;

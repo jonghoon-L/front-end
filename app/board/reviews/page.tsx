@@ -6,6 +6,7 @@ import PageHero from "@/components/PageHero";
 import { apiGet } from "@/api/apiClient";
 import { ChevronLeft, ChevronRight, Pin, Pencil } from "lucide-react";
 import { useFadeIn } from "@/hooks/useFadeIn";
+import { maskName } from "@/lib/maskName";
 
 interface ReviewItem {
   reviewId: number;
@@ -19,7 +20,108 @@ interface ReviewItem {
 interface ReviewsListResponse {
   currentPage: number;
   totalPages: number;
+  totalElements: number;
   reviews: ReviewItem[];
+}
+
+/** 목록 API 페이지 크기 — 관리자 후기 페이지(REVIEW_LIST_PAGE_SIZE)와 동일 */
+const REVIEW_LIST_PAGE_SIZE = 10;
+
+function coerceCount(v: unknown): number | undefined {
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v === "string" && v.trim() !== "" && !Number.isNaN(Number(v))) {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : undefined;
+  }
+  return undefined;
+}
+
+/**
+ * Spring Page / 공통 래핑 등으로 `totalElements` 위치가 달라져도 찾음.
+ * 관리자 `fetchAdminReviews`가 받는 JSON과 동일 필드면 반드시 잡혀야 함.
+ */
+function extractTotalElementsFromBody(raw: unknown): number {
+  const r = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  const dataVal = r.data;
+  const dataObj =
+    dataVal && typeof dataVal === "object" && !Array.isArray(dataVal)
+      ? (dataVal as Record<string, unknown>)
+      : null;
+  const pageObj =
+    r.page && typeof r.page === "object"
+      ? (r.page as Record<string, unknown>)
+      : null;
+
+  const tryKeys = (obj: Record<string, unknown>) =>
+    coerceCount(obj.totalElements) ??
+    coerceCount(obj.total_elements) ??
+    coerceCount(obj.total);
+
+  const candidates: (number | undefined)[] = [
+    tryKeys(r),
+    dataObj ? tryKeys(dataObj) : undefined,
+    pageObj ? tryKeys(pageObj) : undefined,
+    dataObj && typeof dataObj.page === "object"
+      ? tryKeys(dataObj.page as Record<string, unknown>)
+      : undefined,
+  ];
+
+  for (const c of candidates) {
+    if (c !== undefined && c >= 0) return Math.floor(c);
+  }
+  return 0;
+}
+
+/**
+ * 공통 클라이언트 목록 API가 totalElements를 안 내려줄 때(필드 자체 없음).
+ * 관리자 API처럼 totalElements가 오면 위 extract만 쓰면 됨.
+ */
+function inferTotalElementsWhenMissing(
+  totalPages: number,
+  currentPage: number,
+  reviewsLength: number,
+  pageSize: number
+): number {
+  if (reviewsLength <= 0) return 0;
+  if (totalPages <= 1) return reviewsLength;
+  if (currentPage === totalPages) {
+    return (totalPages - 1) * pageSize + reviewsLength;
+  }
+  return reviewsLength + (totalPages - currentPage);
+}
+
+/** 관리자 목록 API와 동일하게 응답 정규화 (totalElements + reviews) */
+function parseReviewsListResponse(raw: unknown): ReviewsListResponse {
+  const r = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  /** `data`가 배열이면 메타데이터는 보통 루트(r)에 있음 — inner로 쓰면 totalElements를 놓침 */
+  const inner: Record<string, unknown> =
+    r.data && typeof r.data === "object" && !Array.isArray(r.data)
+      ? (r.data as Record<string, unknown>)
+      : r;
+  const pick = (key: string) => inner[key] ?? r[key];
+
+  const reviewsRaw = pick("reviews") ?? pick("content");
+  const reviews = Array.isArray(reviewsRaw) ? (reviewsRaw as ReviewItem[]) : [];
+
+  const tp = pick("totalPages") ?? pick("total_pages");
+  const totalPages =
+    typeof tp === "number" && Number.isFinite(tp) && tp > 0 ? tp : 1;
+
+  const cp = pick("currentPage") ?? pick("current_page");
+  const currentPage =
+    typeof cp === "number" && Number.isFinite(cp) && cp > 0 ? cp : 1;
+
+  let totalElements = extractTotalElementsFromBody(raw);
+  if (totalElements <= 0 && reviews.length > 0) {
+    totalElements = inferTotalElementsWhenMissing(
+      totalPages,
+      currentPage,
+      reviews.length,
+      REVIEW_LIST_PAGE_SIZE
+    );
+  }
+
+  return { currentPage, totalPages, totalElements, reviews };
 }
 
 function formatCreatedAt(iso: string): string {
@@ -40,12 +142,30 @@ export default function ReviewsPage() {
   const contentTopRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     setError(null);
-    apiGet<ReviewsListResponse>(`/v1/common/reviews?page=${currentPage}`)
-      .then((res) => setData(res))
-      .catch((err) => setError(err instanceof Error ? err.message : "목록을 불러오지 못했습니다."))
-      .finally(() => setLoading(false));
+    apiGet<unknown>(`/v1/common/reviews?page=${currentPage}`, {
+      useRelativePath: true,
+      headers: { "Content-Type": "application/json" },
+    })
+      .then((res) => {
+        if (cancelled) return;
+        setData(parseReviewsListResponse(res));
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(
+          err instanceof Error ? err.message : "목록을 불러오지 못했습니다."
+        );
+        setData(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [currentPage]);
 
   useLayoutEffect(() => {
@@ -70,6 +190,10 @@ export default function ReviewsPage() {
 
   const pagedPosts = data?.reviews ?? [];
   const totalPages = data?.totalPages ?? 1;
+  /** 관리자 페이지와 동일: 목록 응답의 totalElements */
+  const totalElements = data?.totalElements ?? 0;
+  /** 이번 페이지 우수 후기 — 수식에서만큼 제외 */
+  const bestReviews = pagedPosts.filter((p) => p.isTop);
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-white">
@@ -124,9 +248,11 @@ export default function ReviewsPage() {
               <p className="text-slate-500">등록된 후기가 없습니다.</p>
             </div>
           ) : (
-          pagedPosts.map((post, index) => {
+          pagedPosts.map((post, rowIndex) => {
             const isPinned = post.isTop;
-            const regularNum = (currentPage - 1) * 10 + index + 1;
+            const index = pagedPosts
+              .slice(0, rowIndex)
+              .filter((p) => !p.isTop).length;
             return (
               <Link
                 key={post.reviewId}
@@ -146,14 +272,20 @@ export default function ReviewsPage() {
                           우수 후기
                         </span>
                       ) : (
-                        <span className="text-xs font-medium text-slate-400">#{regularNum}</span>
+                        <span className="text-xs font-medium text-slate-400">
+                          #
+                          {totalElements -
+                            bestReviews.length -
+                            (currentPage - 1) * REVIEW_LIST_PAGE_SIZE -
+                            index}
+                        </span>
                       )}
                     </div>
                     <h3 className={`line-clamp-2 ${isPinned ? "font-bold text-slate-900" : "font-semibold text-slate-800"}`}>
                       {post.title}
                     </h3>
                     <div className={`mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs ${isPinned ? "font-semibold text-slate-700" : "text-slate-500"}`}>
-                      <span>{post.authorName}</span>
+                      <span>{maskName(post.authorName)}</span>
                       <span>{formatCreatedAt(post.createdAt)}</span>
                       <span>조회 {post.viewCount}</span>
                     </div>
@@ -215,9 +347,11 @@ export default function ReviewsPage() {
                     <td colSpan={5} className="px-8 py-16 text-center text-slate-500">등록된 후기가 없습니다.</td>
                   </tr>
                 ) : (
-                pagedPosts.map((post, index) => {
+                pagedPosts.map((post, rowIndex) => {
                   const isPinned = post.isTop;
-                  const regularNum = (currentPage - 1) * 10 + index + 1;
+                  const index = pagedPosts
+                    .slice(0, rowIndex)
+                    .filter((p) => !p.isTop).length;
                   return (
                     <tr
                       key={post.reviewId}
@@ -232,7 +366,12 @@ export default function ReviewsPage() {
                             우수 후기
                           </span>
                         ) : (
-                          <span className="text-sm font-medium text-slate-400">{regularNum}</span>
+                          <span className="text-sm font-medium text-slate-400">
+                            {totalElements -
+                              bestReviews.length -
+                              (currentPage - 1) * REVIEW_LIST_PAGE_SIZE -
+                              index}
+                          </span>
                         )}
                       </td>
                       <td className="px-8 py-5">
@@ -246,7 +385,7 @@ export default function ReviewsPage() {
                           <ChevronRight className="h-4 w-4 shrink-0 opacity-0 transition-opacity group-hover:opacity-100" />
                         </Link>
                       </td>
-                      <td className={`px-8 py-5 text-center text-base ${isPinned ? "font-semibold text-slate-800" : "text-slate-500"}`}>{post.authorName}</td>
+                      <td className={`px-8 py-5 text-center text-base ${isPinned ? "font-semibold text-slate-800" : "text-slate-500"}`}>{maskName(post.authorName)}</td>
                       <td className={`px-8 py-5 text-center text-base ${isPinned ? "font-semibold text-slate-800" : "text-slate-500"}`}>{formatCreatedAt(post.createdAt)}</td>
                       <td className={`px-8 py-5 text-center text-base ${isPinned ? "font-semibold text-slate-800" : "text-slate-400"}`}>{post.viewCount}</td>
                     </tr>
