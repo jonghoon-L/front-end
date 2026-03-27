@@ -16,6 +16,19 @@ export interface AdminReviewsResponse {
   reviews: AdminReviewListItem[];
 }
 
+/** GET /v1/admin/reviews/{reviewId} 응답 */
+export interface AdminReviewDetail {
+  reviewId: number;
+  title: string;
+  content: string;
+  authorName: string;
+  imageUrls: string[];
+  viewCount: number;
+  isApproved: boolean;
+  isBest: boolean;
+  createdAt: string;
+}
+
 /**
  * GET /v1/admin/reviews?page={page}
  */
@@ -29,5 +42,16 @@ export async function fetchAdminReviews(
     headers: {
       "Content-Type": "application/json",
     },
+  });
+}
+
+/**
+ * GET /v1/admin/reviews/{reviewId}
+ */
+export async function fetchAdminReviewDetail(
+  reviewId: number
+): Promise<AdminReviewDetail> {
+  return apiGet<AdminReviewDetail>(`/v1/admin/reviews/${reviewId}`, {
+    useRelativePath: true,
   });
 }

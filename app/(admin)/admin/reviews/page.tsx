@@ -4,12 +4,25 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { Star, X, MessageSquare, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   fetchAdminReviews,
+  fetchAdminReviewDetail,
   type AdminReviewListItem,
+  type AdminReviewDetail,
   type AdminReviewsResponse,
 } from "@/api/adminReviews";
 
 /** 목록 API 페이지 크기(가상 번호 계산과 동일해야 함) */
 const REVIEW_LIST_PAGE_SIZE = 10;
+
+/** 모달 헤더용: YYYY.MM.DD (시간 없음) */
+function formatDetailDate(isoOrDisplay: string): string {
+  try {
+    const d = new Date(isoOrDisplay);
+    if (Number.isNaN(d.getTime())) return isoOrDisplay;
+    return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
+  } catch {
+    return isoOrDisplay;
+  }
+}
 
 function ToggleSwitch({
   checked,
@@ -53,6 +66,12 @@ export default function ReviewsPage() {
 
   const [selectedReview, setSelectedReview] =
     useState<AdminReviewListItem | null>(null);
+  /** 모달 상세 API 응답 */
+  const [reviewDetail, setReviewDetail] = useState<AdminReviewDetail | null>(
+    null
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastExiting, setToastExiting] = useState(false);
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -108,8 +127,29 @@ export default function ReviewsPage() {
     };
   }, [currentPage]);
 
-  const handleTitleClick = (review: AdminReviewListItem) => {
+  const handleTitleClick = async (review: AdminReviewListItem) => {
     setSelectedReview(review);
+    setReviewDetail(null);
+    setDetailError(null);
+    setIsLoading(true);
+    try {
+      const detail = await fetchAdminReviewDetail(review.reviewId);
+      setReviewDetail(detail);
+    } catch (e) {
+      const msg =
+        e instanceof Error ? e.message : "상세 정보를 불러오지 못했습니다.";
+      setDetailError(msg);
+      showToast(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const closeDetailModal = () => {
+    setSelectedReview(null);
+    setReviewDetail(null);
+    setDetailError(null);
+    setIsLoading(false);
   };
 
   const handleApprovalToggle = (reviewId: number) => {
@@ -356,7 +396,7 @@ export default function ReviewsPage() {
       {selectedReview && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-[logo-transition-fade-in_0.25s_ease-out]"
-          onClick={() => setSelectedReview(null)}
+          onClick={closeDetailModal}
           role="dialog"
           aria-modal="true"
           aria-labelledby="review-modal-title"
@@ -367,21 +407,40 @@ export default function ReviewsPage() {
           >
             <div className="shrink-0 border-b border-slate-200 p-6">
               <div className="flex items-start justify-between gap-4">
-                <div>
+                <div className="min-w-0 flex-1 flex flex-col items-start gap-2">
                   <h2
                     id="review-modal-title"
-                    className="text-xl font-bold text-slate-800"
+                    className="flex w-full min-w-0 items-start gap-2 text-xl font-bold text-slate-800"
                   >
-                    {selectedReview.title}
+                    <span className="min-w-0 flex-1 break-words">
+                      {reviewDetail?.title ?? selectedReview.title}
+                    </span>
+                    {(reviewDetail?.isBest ?? selectedReview.isBest) && (
+                      <Star
+                        className="mt-0.5 h-6 w-6 shrink-0 fill-yellow-400 text-yellow-400"
+                        aria-hidden
+                      />
+                    )}
                   </h2>
-                  <div className="mt-2 flex gap-4 pl-2 text-sm text-slate-500">
-                    <span>{selectedReview.authorName}</span>
-                    <span>{selectedReview.createdAt}</span>
+                  <div className="flex w-full min-w-0 flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-500">
+                    <span>
+                      {reviewDetail?.authorName ?? selectedReview.authorName}
+                    </span>
+                    <span>
+                      {formatDetailDate(
+                        reviewDetail?.createdAt ?? selectedReview.createdAt
+                      )}
+                    </span>
+                    {reviewDetail != null && (
+                      <span className="text-xs text-slate-400">
+                        조회 {reviewDetail.viewCount.toLocaleString("ko-KR")}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setSelectedReview(null)}
+                  onClick={closeDetailModal}
                   className="shrink-0 cursor-pointer rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600"
                   aria-label="닫기"
                 >
@@ -391,16 +450,40 @@ export default function ReviewsPage() {
             </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto p-6 custom-scrollbar">
-              <div className="rounded-lg bg-slate-50 p-6 text-sm text-slate-600 leading-relaxed">
-                목록 조회 응답에는 본문이 포함되지 않습니다. 본문 미리보기는 상세
-                API 연동 후 제공할 수 있습니다.
-              </div>
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center gap-3 py-16 text-slate-500">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-300 border-t-slate-600" />
+                  <p className="text-sm">로딩 중…</p>
+                </div>
+              ) : detailError ? (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-sm text-red-700">
+                  {detailError}
+                </div>
+              ) : reviewDetail ? (
+                <>
+                  <div className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
+                    {reviewDetail.content}
+                  </div>
+                  {(reviewDetail.imageUrls ?? []).length > 0 && (
+                    <div className="mt-6 flex flex-col gap-4">
+                      {(reviewDetail.imageUrls ?? []).map((url, i) => (
+                        <img
+                          key={`${url}-${i}`}
+                          src={url}
+                          alt=""
+                          className="max-h-[min(420px,70vh)] w-full max-w-full rounded-lg border border-slate-200 object-contain"
+                        />
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : null}
             </div>
 
             <div className="shrink-0 flex justify-end border-t border-slate-200 p-4">
               <button
                 type="button"
-                onClick={() => setSelectedReview(null)}
+                onClick={closeDetailModal}
                 className="cursor-pointer rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
               >
                 닫기
