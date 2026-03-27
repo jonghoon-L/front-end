@@ -41,8 +41,15 @@ export default function High2High3FacilityPage() {
   const extendedSlides = [items[N - 1], ...items, items[0]];
   const isTransitioning = pendingSectionRef.current !== null;
 
-  const goPrev = () => setSlideIndex((prev) => prev - 1);
-  const goNext = () => setSlideIndex((prev) => prev + 1);
+  const maxSlideIndex = extendedSlides.length - 1;
+
+  const goPrev = () =>
+    setSlideIndex((prev) => (prev <= 0 ? prev : prev - 1));
+
+  const goNext = () =>
+    setSlideIndex((prev) =>
+      prev >= maxSlideIndex ? prev : prev + 1
+    );
 
   const goToSection = (index: number) => {
     if (index === sectionIndex) return;
