@@ -5,6 +5,7 @@ import { Star, X, MessageSquare, ChevronLeft, ChevronRight } from "lucide-react"
 import {
   fetchAdminReviews,
   fetchAdminReviewDetail,
+  patchAdminReviewStatus,
   type AdminReviewListItem,
   type AdminReviewDetail,
   type AdminReviewsResponse,
@@ -75,6 +76,7 @@ export default function ReviewsPage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastExiting, setToastExiting] = useState(false);
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const approvalRequestRef = useRef<Set<number>>(new Set());
 
   const showToast = useCallback((message: string) => {
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
@@ -152,15 +154,17 @@ export default function ReviewsPage() {
     setIsLoading(false);
   };
 
-  const handleApprovalToggle = (reviewId: number) => {
-    let nextApproved = false;
-    let didToggle = false;
+  const handleApprovalToggle = async (reviewId: number) => {
+    const row = reviewData?.reviews.find((r) => r.reviewId === reviewId);
+    if (!row || approvalRequestRef.current.has(reviewId)) return;
+
+    const previousApproved = row.isApproved;
+    const nextApproved = !previousApproved;
+    const status = nextApproved ? "APPROVED" : "PENDING";
+
+    approvalRequestRef.current.add(reviewId);
     setReviewData((prev) => {
       if (!prev) return prev;
-      const row = prev.reviews.find((r) => r.reviewId === reviewId);
-      if (!row) return prev;
-      didToggle = true;
-      nextApproved = !row.isApproved;
       return {
         ...prev,
         reviews: prev.reviews.map((r) =>
@@ -168,15 +172,44 @@ export default function ReviewsPage() {
         ),
       };
     });
-    if (!didToggle) return;
-    console.log(
-      `[API 호출] PATCH /reviews/${reviewId} - 승인 상태: ${nextApproved ? "승인됨" : "미승인"}`
+    setSelectedReview((s) =>
+      s?.reviewId === reviewId ? { ...s, isApproved: nextApproved } : s
     );
-    showToast(
-      nextApproved
-        ? "✅ 후기가 승인되었습니다."
-        : "✅ 후기가 해제되었습니다."
+    setReviewDetail((d) =>
+      d?.reviewId === reviewId ? { ...d, isApproved: nextApproved } : d
     );
+
+    try {
+      await patchAdminReviewStatus(reviewId, status);
+      showToast(
+        nextApproved
+          ? "후기가 승인되었습니다."
+          : "후기가 반려되었습니다."
+      );
+    } catch (e) {
+      const msg =
+        e instanceof Error ? e.message : "승인 상태를 변경하지 못했습니다.";
+      showToast(msg);
+      setReviewData((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          reviews: prev.reviews.map((r) =>
+            r.reviewId === reviewId
+              ? { ...r, isApproved: previousApproved }
+              : r
+          ),
+        };
+      });
+      setSelectedReview((s) =>
+        s?.reviewId === reviewId ? { ...s, isApproved: previousApproved } : s
+      );
+      setReviewDetail((d) =>
+        d?.reviewId === reviewId ? { ...d, isApproved: previousApproved } : d
+      );
+    } finally {
+      approvalRequestRef.current.delete(reviewId);
+    }
   };
 
   const handleExcellentToggle = (reviewId: number) => {

@@ -1,4 +1,4 @@
-import { apiGet } from "@/api/apiClient";
+import { apiGet, apiPatch } from "@/api/apiClient";
 
 export interface AdminReviewListItem {
   reviewId: number;
@@ -54,4 +54,18 @@ export async function fetchAdminReviewDetail(
   return apiGet<AdminReviewDetail>(`/v1/admin/reviews/${reviewId}`, {
     useRelativePath: true,
   });
+}
+
+/**
+ * PATCH /v1/admin/reviews/{reviewId}/status
+ */
+export async function patchAdminReviewStatus(
+  reviewId: number,
+  status: "APPROVED" | "PENDING"
+): Promise<void> {
+  await apiPatch(
+    `/v1/admin/reviews/${reviewId}/status`,
+    { status },
+    { useRelativePath: true }
+  );
 }
