@@ -1,14 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import PageHero from "@/components/PageHero";
 import { useFadeIn } from "@/hooks/useFadeIn";
-import { apiPost, AUTH_TOKEN_KEY } from "@/api/apiClient";
+import { apiPost, apiPostForm, AUTH_TOKEN_KEY } from "@/api/apiClient";
 import { sendVerificationCode, verifyAuthCode } from "@/api/auth";
 
 const MAX_IMAGES = 5;
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+/** 업로드 API 응답 — 최종 후기 등록 시 `imageUrls`로 전달 */
+interface ImageUploadResponse {
+  success: boolean;
+  imageUrl: string;
+}
 
 interface SubmitReviewResponse {
   success: boolean;
@@ -16,11 +22,22 @@ interface SubmitReviewResponse {
   reviewId?: number;
 }
 
+function isAllowedImageFile(file: File): boolean {
+  const mimeOk = file.type.startsWith("image/");
+  const extOk = /\.(jpe?g|png|gif|webp)$/i.test(file.name);
+  return mimeOk && extOk;
+}
+
 export default function ReviewRegisterPage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const imageUrlsRef = useRef<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    imageUrlsRef.current = imageUrls;
+  }, [imageUrls]);
   const [name, setName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
@@ -33,28 +50,82 @@ export default function ReviewRegisterPage() {
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [verifyError, setVerifyError] = useState<string | null>(null);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? []);
-    const valid = files.filter((f) => f.size <= MAX_FILE_SIZE && f.type.startsWith("image/"));
-    const total = [...imageFiles, ...valid].slice(0, MAX_IMAGES);
-    setImageFiles(total);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastExiting, setToastExiting] = useState(false);
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const newPreviews = valid.map((f) => URL.createObjectURL(f));
-    const allPreviews = [...imagePreviews, ...newPreviews].slice(0, MAX_IMAGES);
-    setImagePreviews((prev) => {
-      const toKeep = new Set(allPreviews);
-      prev.forEach((url) => {
-        if (!toKeep.has(url)) URL.revokeObjectURL(url);
-      });
-      return allPreviews;
-    });
+  const showToast = useCallback((message: string) => {
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    setToastExiting(false);
+    setToastMessage(message);
+    toastTimeoutRef.current = setTimeout(() => {
+      setToastExiting(true);
+      toastTimeoutRef.current = setTimeout(() => {
+        setToastMessage(null);
+        setToastExiting(false);
+        toastTimeoutRef.current = null;
+      }, 700);
+    }, 2500);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    };
+  }, []);
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    if (files.length === 0) return;
+
+    setUploading(true);
+    try {
+      for (const file of files) {
+        if (imageUrlsRef.current.length >= MAX_IMAGES) break;
+
+        if (file.size > MAX_FILE_SIZE) {
+          showToast("5MB 이하의 이미지만 업로드할 수 있습니다.");
+          continue;
+        }
+        if (!isAllowedImageFile(file)) {
+          showToast("JPG, PNG, GIF, WEBP 형식만 업로드할 수 있습니다.");
+          continue;
+        }
+
+        const formData = new FormData();
+        formData.append("image", file);
+
+        try {
+          const data = await apiPostForm<ImageUploadResponse>("/v1/images", formData, {
+            useRelativePath: true,
+            skipUnauthorizedRedirect: true,
+            ...(verificationToken ? { token: verificationToken } : {}),
+          });
+          if (data?.success && data.imageUrl) {
+            setImageUrls((prev) => {
+              if (prev.length >= MAX_IMAGES) return prev;
+              const next = [...prev, data.imageUrl];
+              imageUrlsRef.current = next;
+              return next;
+            });
+          } else {
+            showToast("이미지 업로드에 실패했습니다.");
+          }
+        } catch {
+          showToast("이미지 업로드에 실패했습니다.");
+        }
+      }
+    } finally {
+      setUploading(false);
+    }
   };
 
   const removeImage = (index: number) => {
-    setImageFiles((prev) => prev.filter((_, i) => i !== index));
-    setImagePreviews((prev) => {
-      URL.revokeObjectURL(prev[index]);
-      return prev.filter((_, i) => i !== index);
+    setImageUrls((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+      imageUrlsRef.current = next;
+      return next;
     });
   };
 
@@ -116,6 +187,9 @@ export default function ReviewRegisterPage() {
         content: content.trim(),
         name: name.trim(),
       };
+      if (imageUrls.length > 0) {
+        body.imageUrls = imageUrls;
+      }
 
       const data = await apiPost<SubmitReviewResponse>("/v1/user/reviews", body, {
         token: verificationToken,
@@ -191,42 +265,50 @@ export default function ReviewRegisterPage() {
             />
           </div>
 
-          {/* 이미지 (선택) - API는 S3 URL(imageUrls) 필요. 업로드 API 연동 전에는 미포함 */}
+          {/* 사진 첨부 — 선택 시 S3 업로드 후 URL을 imageUrls에 저장 */}
           <div>
             <h3 className="text-gray-900 font-medium text-base mb-2">사진 첨부 (선택)</h3>
             <hr className="border-gray-200 mb-4" />
-            <div className="flex flex-wrap gap-3">
-              {imagePreviews.map((url, i) => (
-                <div key={url} className="relative">
+            <div className="flex flex-wrap items-start gap-3">
+              {imageUrls.map((url, i) => (
+                <div key={`${url}-${i}`} className="relative">
                   <img
                     src={url}
-                    alt={`미리보기 ${i + 1}`}
-                    className="h-28 w-28 object-cover rounded-lg border border-gray-200"
+                    alt={`첨부 이미지 ${i + 1}`}
+                    className="h-28 w-28 object-cover rounded-lg border border-gray-200 bg-white"
                   />
                   <button
                     type="button"
                     onClick={() => removeImage(i)}
-                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500 text-white text-sm flex items-center justify-center hover:bg-red-600"
+                    className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-red-500 text-white text-sm flex items-center justify-center hover:bg-red-600 shadow-sm"
+                    aria-label={`이미지 ${i + 1} 삭제`}
                   >
                     ×
                   </button>
                 </div>
               ))}
-              {imagePreviews.length < MAX_IMAGES && (
-                <label className="h-28 w-28 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 text-gray-500 hover:bg-gray-100 cursor-pointer text-sm">
-                  <span>+</span>
-                  <span>추가</span>
+              {imageUrls.length < MAX_IMAGES && (
+                <label
+                  className={`h-28 w-28 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 text-gray-500 text-sm ${
+                    uploading ? "cursor-not-allowed opacity-60" : "hover:bg-gray-100 cursor-pointer"
+                  }`}
+                >
+                  <span>{uploading ? "…" : "+"}</span>
+                  <span>{uploading ? "업로드 중" : "추가"}</span>
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/gif,image/webp,.jpg,.jpeg,.png,.gif,.webp"
                     multiple
+                    disabled={uploading}
                     onChange={handleImageChange}
                     className="hidden"
                   />
                 </label>
               )}
             </div>
-            <p className="text-sm text-gray-500 mt-2">최대 {MAX_IMAGES}장, 5MB 이하 (업로드 API 연동 후 저장)</p>
+            <p className="text-sm text-gray-500 mt-2">
+              최대 {MAX_IMAGES}장, 파일당 5MB 이하 (JPG, PNG, GIF, WEBP). 선택 즉시 업로드됩니다.
+            </p>
           </div>
 
           {/* 이름, 휴대폰, 인증 */}
@@ -295,7 +377,7 @@ export default function ReviewRegisterPage() {
 
           <button
             type="submit"
-            disabled={isSubmitting || !canSubmit}
+            disabled={isSubmitting || !canSubmit || uploading}
             className="w-full py-4 rounded-xl bg-slate-700 text-white text-base font-medium hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isSubmitting ? "등록 중…" : "후기 등록"}
@@ -311,6 +393,18 @@ export default function ReviewRegisterPage() {
           </Link>
         </div>
       </section>
+
+      {(toastMessage || toastExiting) && (
+        <div
+          className={`fixed bottom-5 right-5 z-[60] max-w-[min(100vw-2rem,20rem)] rounded-lg bg-slate-800 px-5 py-3.5 text-sm font-medium text-white shadow-lg ${
+            toastExiting
+              ? "translate-x-4 opacity-0 pointer-events-none transition-all duration-700 ease-out"
+              : "animate-[toast-slide-in_0.5s_ease-out]"
+          }`}
+        >
+          {toastMessage}
+        </div>
+      )}
     </main>
   );
 }
