@@ -14,6 +14,8 @@ export interface Waitlist {
   name: string;
   age: number;
   phoneNumber: string;
+  /** 기존 재원생 여부 (미제공 시 undefined) */
+  isExisting?: boolean;
   status: WaitlistStatus;
   registeredAt: string;
 }

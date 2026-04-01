@@ -135,7 +135,6 @@ export default function WaitlistsPage() {
           : { season: tab.season, branch: tab.branch }
       );
       const list = data.waitlists ?? [];
-      list.sort((a, b) => a.waitingNumber - b.waitingNumber);
       setItems(list);
       setLoadError(null);
       setLoadState("idle");
@@ -312,6 +311,9 @@ export default function WaitlistsPage() {
                 대기 순번
               </th>
               <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                기존 재원 여부
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
                 이름
               </th>
               <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
@@ -332,7 +334,7 @@ export default function WaitlistsPage() {
           <tbody>
             {loadState === "loading" ? (
               <tr>
-                <td colSpan={7} className="p-0 align-middle">
+                <td colSpan={8} className="p-0 align-middle">
                   <div className="flex min-h-[min(42vh,18rem)] flex-col items-center justify-center gap-4 px-6 py-12">
                     <Loader2
                       className="h-10 w-10 animate-spin text-slate-700"
@@ -348,7 +350,7 @@ export default function WaitlistsPage() {
             ) : items.length === 0 ? (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={8}
                   className="px-6 py-16 text-center text-sm text-slate-500"
                 >
                   해당 구간에 등록된 대기자가 없습니다.
@@ -368,6 +370,25 @@ export default function WaitlistsPage() {
                   >
                     <td className="px-6 py-4 text-sm font-medium text-slate-700">
                       {item.waitingNumber}
+                    </td>
+                    <td className="px-6 py-4">
+                      {item.isExisting === true ? (
+                        <span
+                          className="inline-flex min-w-[1.75rem] items-center justify-center rounded-full border border-blue-200 bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-700"
+                          title="기존 재원생"
+                        >
+                          O
+                        </span>
+                      ) : item.isExisting === false ? (
+                        <span
+                          className="inline-flex min-w-[1.75rem] items-center justify-center rounded-full border border-red-200 bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700"
+                          title="신규생"
+                        >
+                          X
+                        </span>
+                      ) : (
+                        <span className="text-sm text-slate-400">—</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-800">{item.name}</td>
                     <td className="px-6 py-4 text-sm text-slate-600">{item.age}</td>
