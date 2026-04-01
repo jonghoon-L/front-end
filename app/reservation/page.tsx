@@ -34,6 +34,7 @@ async function submitWaitlist(
     season: Season;
     name: string;
     phoneNumber: string;
+    isExisting: boolean;
     age?: number;
     school?: string;
     grade?: string;
@@ -43,6 +44,7 @@ async function submitWaitlist(
     season: payload.season,
     name: payload.name.trim(),
     phoneNumber: payload.phoneNumber.replace(/\D/g, ""),
+    isExisting: payload.isExisting,
   };
   if (payload.branch != null) {
     body.branch = payload.branch;
@@ -63,6 +65,8 @@ export default function ReservationPage() {
   const [season, setSeason] = useState<Season | null>(null);
   const [branch, setBranch] = useState<Branch | null>(null);
   const [name, setName] = useState("");
+  /** 미선택: null — 제출 시 true(기존 재원생) / false(신규생) */
+  const [isExisting, setIsExisting] = useState<boolean | null>(null);
   const [age, setAge] = useState("");
   const [school, setSchool] = useState("");
   const [grade, setGrade] = useState("");
@@ -78,6 +82,7 @@ export default function ReservationPage() {
   const [verifyError, setVerifyError] = useState<string | null>(null);
   const [phoneAuthModalMessage, setPhoneAuthModalMessage] = useState<string | null>(null);
   const reloadAfterModalCloseRef = useRef(false);
+  const [isExistingError, setIsExistingError] = useState<string | null>(null);
 
   const showBranchSelection = season !== null && needsBranch(season);
 
@@ -133,7 +138,12 @@ export default function ReservationPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsExistingError(null);
     if (!season || !name.trim() || !phoneNumber.trim() || !phoneVerified || !verificationToken) return;
+    if (isExisting === null) {
+      setIsExistingError("기존 재원 여부를 선택해주세요.");
+      return;
+    }
     if (needsBranch(season) && !branch) return;
 
     const isCamp = !needsBranch(season);
@@ -152,6 +162,7 @@ export default function ReservationPage() {
       season: Season;
       name: string;
       phoneNumber: string;
+      isExisting: boolean;
       age?: number;
       school?: string;
       grade?: string;
@@ -160,6 +171,7 @@ export default function ReservationPage() {
       season,
       name: name.trim(),
       phoneNumber: phoneNumber.trim(),
+      isExisting,
     };
     if (isNBranch) {
       payload.age = parseInt(age, 10);
@@ -188,6 +200,7 @@ export default function ReservationPage() {
   const canSubmit =
     !!season &&
     name.trim() &&
+    isExisting !== null &&
     phoneNumber.trim() &&
     phoneVerified &&
     !!verificationToken &&
@@ -264,6 +277,25 @@ export default function ReservationPage() {
                 onChange={(e) => setName(e.target.value)}
                 className="w-full py-3 px-4 rounded-xl border border-gray-200 text-base text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-gray-300 bg-gray-50/50"
               />
+              <select
+                value={isExisting === null ? "" : isExisting ? "true" : "false"}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setIsExisting(v === "" ? null : v === "true");
+                  setIsExistingError(null);
+                }}
+                className={`w-full py-3 px-4 rounded-xl border border-gray-200 text-base focus:outline-none focus:border-gray-300 bg-gray-50/50 appearance-none cursor-pointer ${
+                  isExisting !== null ? "text-gray-800" : "text-gray-400"
+                }`}
+                aria-invalid={Boolean(isExistingError)}
+              >
+                <option value="" disabled hidden>
+                  기존 재원 여부를 선택해주세요
+                </option>
+                <option value="true">기존 재원생</option>
+                <option value="false">신규생</option>
+              </select>
+              {isExistingError && <p className="text-sm text-red-600">{isExistingError}</p>}
               {showBranchSelection && branch === "N" ? (
                 <input
                   type="number"
@@ -288,7 +320,9 @@ export default function ReservationPage() {
                     onChange={(e) => setGrade(e.target.value)}
                     className={`w-full py-3 px-4 rounded-xl border border-gray-200 text-base focus:outline-none focus:border-gray-300 bg-gray-50/50 appearance-none cursor-pointer ${grade ? "text-gray-800" : "text-gray-400"}`}
                   >
-                    <option value="">학년을 선택해주세요</option>
+                    <option value="" disabled hidden>
+                      학년을 선택해주세요
+                    </option>
                     <option value="2학년">2학년</option>
                     <option value="3학년">3학년</option>
                   </select>

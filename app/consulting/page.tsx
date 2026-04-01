@@ -385,7 +385,9 @@ export default function ConsultingPage() {
                     onChange={(e) => setGrade(e.target.value)}
                     className={`w-full py-3 px-4 rounded-xl border border-gray-200 text-base focus:outline-none focus:border-gray-300 bg-gray-50/50 appearance-none cursor-pointer ${grade ? "text-gray-800" : "text-gray-400"}`}
                   >
-                    <option value="">학년을 선택해주세요</option>
+                    <option value="" disabled hidden>
+                      학년을 선택해주세요
+                    </option>
                     <option value="2학년">2학년</option>
                     <option value="3학년">3학년</option>
                   </select>
