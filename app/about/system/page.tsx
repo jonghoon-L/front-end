@@ -103,19 +103,45 @@ export default function AboutSystemPage() {
             />
           </div>
 
-          {/* 운영 규정 섹션 */}
-          <div className="motion-rise motion-delay-2 mx-auto mb-12 mt-44 max-w-4xl md:mb-16 md:mt-52">
-            <h2 className="mb-6 mt-0 text-center text-3xl font-bold leading-tight text-gray-900 md:text-4xl">
-              <span className="block">최고의 학습 분위기 조성을 위해</span>
-              <span className="block">다음과 같은 규정으로 운영됩니다</span>
-            </h2>
-            <Image
-              src="/images/system.png"
-              alt="로드맵 운영 규정"
-              width={1200}
-              height={1600}
-              className="h-auto w-full"
-            />
+          {/* 운영 지침: 공지 2장만 넓게 / 규정 이미지는 기존 너비(max-w-4xl) */}
+          <div className="motion-rise motion-delay-2 mx-auto mb-12 mt-32 md:mb-16 md:mt-40">
+            <div className="mx-auto w-full max-w-7xl">
+              <h2 className="mb-5 mt-0 text-center text-3xl font-bold leading-tight text-gray-900 md:mb-6 md:text-4xl">
+                <span className="block">최고의 학습 분위기 조성을 위해</span>
+                <span className="block">다음과 같은 지침 아래 운영됩니다</span>
+              </h2>
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-8">
+                <Image
+                  src="/images/notice1.jpg"
+                  alt="운영 지침 안내 1"
+                  width={1200}
+                  height={1600}
+                  className="h-auto w-full rounded-lg object-contain"
+                  sizes="(max-width: 768px) 50vw, 45vw"
+                />
+                <Image
+                  src="/images/notice2.jpg"
+                  alt="운영 지침 안내 2"
+                  width={1200}
+                  height={1600}
+                  className="h-auto w-full rounded-lg object-contain"
+                  sizes="(max-width: 768px) 50vw, 45vw"
+                />
+              </div>
+            </div>
+            <div className="mx-auto mt-10 max-w-4xl md:mt-14">
+              <h2 className="mb-6 mt-0 text-center text-3xl font-bold leading-tight text-gray-900 md:mb-6 md:text-4xl">
+                <span className="block">안내된 지침을 위반할 경우</span>
+                <span className="block">다음과 같은 벌점 규정이 적용됩니다</span>
+              </h2>
+              <Image
+                src="/images/system.png"
+                alt="로드맵 운영 규정"
+                width={1200}
+                height={1600}
+                className="h-auto w-full"
+              />
+            </div>
           </div>
 
           {/* 안내 문구 CTA */}
