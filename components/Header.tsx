@@ -6,10 +6,7 @@ import Image from "next/image";
 import { SiKakaotalk, SiNaver } from "react-icons/si";
 import { FaInstagram } from "react-icons/fa";
 
-const KAKAO_CHANNELS = [
-  { label: "로드맵 N수관 카카오 채널", href: "https://pf.kakao.com/_vbaxcxj" },
-  { label: "로드맵 하이엔드관 카카오 채널", href: "https://pf.kakao.com/_xmwRIG" },
-] as const;
+const KAKAO_CHANNEL_URL = "https://pf.kakao.com/_NxiUIG";
 
 const SNS_LINKS = [
   { href: "https://blog.naver.com/jjwz147", icon: SiNaver, color: "text-[#03C75A] hover:text-[#03C75A]/90" },
@@ -188,32 +185,15 @@ export default function Header() {
           ))}
           {/* SNS 아이콘 - 등록 예약 버튼 오른쪽 (등록 예약과만 간격) */}
           <div className="flex items-center gap-2 pl-2 border-l border-gray-200" aria-label="SNS 링크" style={{ marginLeft: '20px' }}>
-            <div className="relative group">
-              <button
-                type="button"
-                className="flex items-center justify-center w-[22px] h-[22px] rounded-full transition-all duration-200 hover:scale-110 text-[#FEE500] hover:text-[#FEE500]/90"
-                aria-label="카카오톡 채널"
-                aria-expanded="false"
-                aria-haspopup="true"
-              >
-                <SiKakaotalk className="w-[18px] h-[18px]" aria-hidden />
-              </button>
-              <div
-                className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 pt-1 pb-1 min-w-[190px] bg-white border border-gray-200 rounded shadow-sm opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50"
-              >
-                {KAKAO_CHANNELS.map(({ label, href }) => (
-                  <a
-                    key={label}
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block px-4 py-2.5 text-xs text-gray-700 hover:bg-gray-100 transition-colors"
-                  >
-                    {label}
-                  </a>
-                ))}
-              </div>
-            </div>
+            <a
+              href={KAKAO_CHANNEL_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center w-[22px] h-[22px] rounded-full transition-all duration-200 hover:scale-110 text-[#FEE500] hover:text-[#FEE500]/90"
+              aria-label="카카오톡 채널"
+            >
+              <SiKakaotalk className="w-[18px] h-[18px]" aria-hidden />
+            </a>
             {SNS_LINKS.map(({ href, icon: Icon, color }) => (
               <a
                 key={href}
