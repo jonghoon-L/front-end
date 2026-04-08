@@ -15,12 +15,42 @@ export interface Waitlist {
   season: WaitlistSeason;
   name: string;
   gender?: WaitlistGender;
-  age: number;
+  /** N수관·캠프 등. 하이엔드 미수집 시 생략 가능 */
+  age?: number | null;
   phoneNumber: string;
   /** 기존 재원생 여부 (미제공 시 undefined) */
   isExisting?: boolean;
   status: WaitlistStatus;
   registeredAt: string;
+  /** 하이엔드·캠프 — DB `student_school` 등 */
+  student_school?: string | null;
+  student_grade?: string | null;
+  studentSchool?: string | null;
+  studentGrade?: string | null;
+  school?: string | null;
+  grade?: string | null;
+}
+
+function readStringField(obj: Record<string, unknown>, keys: string[]): string | null {
+  for (const key of keys) {
+    const v = obj[key];
+    if (v == null || v === "") continue;
+    const s = typeof v === "string" ? v.trim() : String(v).trim();
+    if (s.length > 0) return s;
+  }
+  return null;
+}
+
+/**
+ * API가 student_school / studentSchool / school 등 여러 키로 줄 수 있어 통일.
+ */
+export function normalizeWaitlist(raw: Waitlist & Record<string, unknown>): Waitlist {
+  const r = raw as Record<string, unknown>;
+  return {
+    ...raw,
+    student_school: readStringField(r, ["student_school", "studentSchool", "school"]),
+    student_grade: readStringField(r, ["student_grade", "studentGrade", "grade"]),
+  };
 }
 
 export interface WaitlistsResponse {
@@ -56,12 +86,16 @@ export async function fetchAdminWaitlists(
   params: FetchAdminWaitlistsParams
 ): Promise<WaitlistsResponse> {
   const qs = buildAdminWaitlistsSearchParams(params).toString();
-  return apiGet<WaitlistsResponse>(`/v1/admin/waitlists?${qs}`, {
+  const data = await apiGet<WaitlistsResponse>(`/v1/admin/waitlists?${qs}`, {
     useRelativePath: true,
     headers: {
       "Content-Type": "application/json",
     },
   });
+  const raw = data.waitlists ?? [];
+  return {
+    waitlists: raw.map((w) => normalizeWaitlist(w as Waitlist & Record<string, unknown>)),
+  };
 }
 
 export interface PatchWaitlistStatusResponse {

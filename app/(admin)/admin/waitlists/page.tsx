@@ -32,6 +32,27 @@ const TABS = [
   { id: "WINTER" as const, label: "겨울캠프", season: "WINTER" as const, branch: null },
 ] as const;
 
+/** N수관: 나이만 / 하이엔드: 학교·학년 / 캠프: 나이 + 학교·학년 */
+type WaitlistTableVariant = "n_branch" | "hi_end" | "camp";
+
+function waitlistTableVariant(tabId: TabId): WaitlistTableVariant {
+  if (tabId === "SEM1_N" || tabId === "SEM2_N") return "n_branch";
+  if (tabId === "SEM1_HI" || tabId === "SEM2_HI") return "hi_end";
+  return "camp";
+}
+
+const WAITLIST_TABLE_COL_SPAN: Record<WaitlistTableVariant, number> = {
+  n_branch: 9,
+  hi_end: 10,
+  camp: 11,
+};
+
+function formatWaitlistCell(value: string | null | undefined): ReactNode {
+  const s = value?.trim();
+  if (!s) return <span className="text-sm text-slate-400">—</span>;
+  return <span className="text-sm text-slate-600">{s}</span>;
+}
+
 const STATUS_LABELS: Record<WaitlistStatus, string> = {
   WAITING: "대기 중",
   CONTACTED: "연락 완료",
@@ -105,6 +126,9 @@ export default function WaitlistsPage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [toastExiting, setToastExiting] = useState(false);
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const tableVariant = waitlistTableVariant(activeTab);
+  const tableColSpan = WAITLIST_TABLE_COL_SPAN[tableVariant];
 
   const showToast = useCallback((message: string) => {
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
@@ -357,9 +381,21 @@ export default function WaitlistsPage() {
               <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
                 성별
               </th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
-                나이
-              </th>
+              {(tableVariant === "n_branch" || tableVariant === "camp") && (
+                <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                  나이
+                </th>
+              )}
+              {(tableVariant === "hi_end" || tableVariant === "camp") && (
+                <>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                    학교
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
+                    학년
+                  </th>
+                </>
+              )}
               <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">
                 연락처
               </th>
@@ -375,7 +411,7 @@ export default function WaitlistsPage() {
           <tbody>
             {loadState === "loading" ? (
               <tr>
-                <td colSpan={9} className="p-0 align-middle">
+                <td colSpan={tableColSpan} className="p-0 align-middle">
                   <div className="flex min-h-[min(42vh,18rem)] flex-col items-center justify-center gap-4 px-6 py-12">
                     <Loader2
                       className="h-10 w-10 animate-spin text-slate-700"
@@ -391,7 +427,7 @@ export default function WaitlistsPage() {
             ) : items.length === 0 ? (
               <tr>
                 <td
-                  colSpan={9}
+                  colSpan={tableColSpan}
                   className="px-6 py-16 text-center text-sm text-slate-500"
                 >
                   해당 구간에 등록된 대기자가 없습니다.
@@ -433,7 +469,21 @@ export default function WaitlistsPage() {
                     </td>
                     <td className="px-6 py-4 text-sm text-slate-800">{item.name}</td>
                     <td className="px-6 py-4">{formatGenderLabel(item.gender)}</td>
-                    <td className="px-6 py-4 text-sm text-slate-600">{item.age}</td>
+                    {(tableVariant === "n_branch" || tableVariant === "camp") && (
+                      <td className="px-6 py-4 text-sm text-slate-600">
+                        {item.age != null ? item.age : "—"}
+                      </td>
+                    )}
+                    {(tableVariant === "hi_end" || tableVariant === "camp") && (
+                      <>
+                        <td className="px-6 py-4">
+                          {formatWaitlistCell(item.student_school)}
+                        </td>
+                        <td className="px-6 py-4">
+                          {formatWaitlistCell(item.student_grade)}
+                        </td>
+                      </>
+                    )}
                     <td className="px-6 py-4 text-sm text-slate-600">
                       {formatPhoneDisplay(item.phoneNumber)}
                     </td>
