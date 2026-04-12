@@ -115,14 +115,6 @@ function formatRegisteredAt(iso: string): string {
   return `${y}-${m}-${day}`;
 }
 
-/** 로컬 기준 오늘 날짜 `YYYY-MM-DD` (직접 추가 모달 기본값) */
-function formatLocalDateYYYYMMDD(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
 type DirectAddFieldKey =
   | "name"
   | "phone"
@@ -149,12 +141,6 @@ function directAddSelectClass(hasError: boolean): string {
   }`;
 }
 
-function directAddRadioGroupClass(hasError: boolean): string {
-  return hasError
-    ? "rounded-lg border border-red-500 bg-red-50/40 p-3 ring-1 ring-red-500"
-    : "";
-}
-
 export default function WaitlistsPage() {
   const [activeTab, setActiveTab] = useState<TabId>("SEM1_N");
   const [selectedGender, setSelectedGender] = useState<GenderFilter>("ALL");
@@ -179,9 +165,7 @@ export default function WaitlistsPage() {
   const [isDirectAddOpen, setIsDirectAddOpen] = useState(false);
   const [addName, setAddName] = useState("");
   const [addPhone, setAddPhone] = useState("");
-  const [addRegisteredAt, setAddRegisteredAt] = useState(() =>
-    formatLocalDateYYYYMMDD(new Date())
-  );
+  const [addRegisteredAt, setAddRegisteredAt] = useState("");
   const [addGender, setAddGender] = useState<"" | WaitlistGender>("");
   const [addIsExisting, setAddIsExisting] = useState<boolean | null>(null);
   const [addAge, setAddAge] = useState("");
@@ -219,7 +203,7 @@ export default function WaitlistsPage() {
   const resetDirectAddForm = useCallback(() => {
     setAddName("");
     setAddPhone("");
-    setAddRegisteredAt(formatLocalDateYYYYMMDD(new Date()));
+    setAddRegisteredAt("");
     setAddGender("");
     setAddIsExisting(null);
     setAddAge("");
@@ -295,8 +279,9 @@ export default function WaitlistsPage() {
       setAddFieldErrors({ phone: true });
       return;
     }
-    if (!addRegisteredAt.trim()) {
-      setAddError("등록 날짜를 선택해주세요.");
+    const registeredAtTrimmed = addRegisteredAt.trim();
+    if (!registeredAtTrimmed) {
+      setAddError("등록 날짜를 선택해 주세요.");
       setAddFieldErrors({ registeredAt: true });
       return;
     }
@@ -351,7 +336,7 @@ export default function WaitlistsPage() {
     const body = buildAdminWaitlistCreateBody(variant, tab.season, tab.branch, {
       name: addName,
       phoneNumber: addPhone,
-      registeredAt: addRegisteredAt.trim(),
+      registeredAt: registeredAtTrimmed,
       gender: addGender,
       isExisting: addIsExisting,
       ageInput: addAge,
@@ -754,7 +739,7 @@ export default function WaitlistsPage() {
                 id="waitlist-direct-add-modal-title"
                 className="text-lg font-bold text-slate-900"
               >
-                대기 학생 직접 추가
+                관리자 대기 학생 직접 추가
               </h2>
               <button
                 type="button"
@@ -767,6 +752,7 @@ export default function WaitlistsPage() {
               </button>
             </div>
             <form
+              noValidate
               onSubmit={(e) => void handleDirectAddSubmit(e)}
               className="max-h-[min(75vh,34rem)] space-y-4 overflow-y-auto px-6 py-5"
             >
@@ -826,85 +812,63 @@ export default function WaitlistsPage() {
                     setAddRegisteredAt(e.target.value);
                     setAddFieldErrors((p) => ({ ...p, registeredAt: false }));
                   }}
-                  className={directAddInputClass(!!addFieldErrors.registeredAt)}
+                  className={`${directAddInputClass(!!addFieldErrors.registeredAt)} cursor-pointer disabled:cursor-not-allowed ${!addRegisteredAt ? "direct-add-date-empty" : ""}`}
                   disabled={addSubmitting}
                   aria-required
                 />
               </div>
-              <fieldset className="space-y-2">
-                <legend className="mb-1.5 text-sm font-medium text-slate-700">
+              <div>
+                <label
+                  htmlFor="direct-add-gender"
+                  className="mb-1.5 block text-sm font-medium text-slate-700"
+                >
                   성별
-                </legend>
-                <div
-                  className={`flex flex-wrap gap-4 ${directAddRadioGroupClass(!!addFieldErrors.gender)}`}
+                </label>
+                <select
+                  id="direct-add-gender"
+                  value={addGender}
+                  onChange={(e) => {
+                    setAddGender(e.target.value as "" | WaitlistGender);
+                    setAddFieldErrors((p) => ({ ...p, gender: false }));
+                  }}
+                  disabled={addSubmitting}
+                  className={directAddSelectClass(!!addFieldErrors.gender)}
                 >
-                  <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
-                    <input
-                      type="radio"
-                      name="direct-add-gender"
-                      checked={addGender === "MALE"}
-                      onChange={() => {
-                        setAddGender("MALE");
-                        setAddFieldErrors((p) => ({ ...p, gender: false }));
-                      }}
-                      disabled={addSubmitting}
-                      className="h-4 w-4 cursor-pointer border-slate-300 text-slate-800 focus:ring-slate-400"
-                    />
-                    남성
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
-                    <input
-                      type="radio"
-                      name="direct-add-gender"
-                      checked={addGender === "FEMALE"}
-                      onChange={() => {
-                        setAddGender("FEMALE");
-                        setAddFieldErrors((p) => ({ ...p, gender: false }));
-                      }}
-                      disabled={addSubmitting}
-                      className="h-4 w-4 cursor-pointer border-slate-300 text-slate-800 focus:ring-slate-400"
-                    />
-                    여성
-                  </label>
-                </div>
-              </fieldset>
-              <fieldset className="space-y-2">
-                <legend className="mb-1.5 text-sm font-medium text-slate-700">
+                  <option value="" disabled hidden />
+                  <option value="MALE">남성</option>
+                  <option value="FEMALE">여성</option>
+                </select>
+              </div>
+              <div>
+                <label
+                  htmlFor="direct-add-is-existing"
+                  className="mb-1.5 block text-sm font-medium text-slate-700"
+                >
                   기존 재원 여부
-                </legend>
-                <div
-                  className={`flex flex-wrap gap-4 ${directAddRadioGroupClass(!!addFieldErrors.isExisting)}`}
+                </label>
+                <select
+                  id="direct-add-is-existing"
+                  value={
+                    addIsExisting === true
+                      ? "true"
+                      : addIsExisting === false
+                        ? "false"
+                        : ""
+                  }
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v === "") setAddIsExisting(null);
+                    else setAddIsExisting(v === "true");
+                    setAddFieldErrors((p) => ({ ...p, isExisting: false }));
+                  }}
+                  disabled={addSubmitting}
+                  className={directAddSelectClass(!!addFieldErrors.isExisting)}
                 >
-                  <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
-                    <input
-                      type="radio"
-                      name="direct-add-existing"
-                      checked={addIsExisting === true}
-                      onChange={() => {
-                        setAddIsExisting(true);
-                        setAddFieldErrors((p) => ({ ...p, isExisting: false }));
-                      }}
-                      disabled={addSubmitting}
-                      className="h-4 w-4 cursor-pointer border-slate-300 text-slate-800 focus:ring-slate-400"
-                    />
-                    O
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
-                    <input
-                      type="radio"
-                      name="direct-add-existing"
-                      checked={addIsExisting === false}
-                      onChange={() => {
-                        setAddIsExisting(false);
-                        setAddFieldErrors((p) => ({ ...p, isExisting: false }));
-                      }}
-                      disabled={addSubmitting}
-                      className="h-4 w-4 cursor-pointer border-slate-300 text-slate-800 focus:ring-slate-400"
-                    />
-                    X
-                  </label>
-                </div>
-              </fieldset>
+                  <option value="" disabled hidden />
+                  <option value="true">O (기존 재원생)</option>
+                  <option value="false">X (신규 학생)</option>
+                </select>
+              </div>
 
               {tableVariant === "n_branch" && (
                 <div>
@@ -968,7 +932,7 @@ export default function WaitlistsPage() {
                       disabled={addSubmitting}
                       className={directAddSelectClass(!!addFieldErrors.grade)}
                     >
-                      <option value="">학년 선택</option>
+                      <option value="" disabled hidden />
                       <option value="2학년">2학년</option>
                       <option value="3학년">3학년</option>
                     </select>
@@ -1035,7 +999,7 @@ export default function WaitlistsPage() {
                       disabled={addSubmitting}
                       className={directAddSelectClass(!!addFieldErrors.grade)}
                     >
-                      <option value="">학년 선택</option>
+                      <option value="" disabled hidden />
                       <option value="2학년">2학년</option>
                       <option value="3학년">3학년</option>
                     </select>

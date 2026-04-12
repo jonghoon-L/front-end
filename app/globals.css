@@ -240,3 +240,12 @@ body {
   animation-delay: 0ms;
 }
 
+/* 관리자 대기 직접 추가: 빈 값일 때 브라우저가 넣는 '연도-월-일' 안내만 숨김 — 달력(아이콘)은 그대로 */
+input[type="date"].direct-add-date-empty:not(:focus)::-webkit-datetime-edit,
+input[type="date"].direct-add-date-empty:not(:focus)::-webkit-datetime-edit-fields-wrapper {
+  opacity: 0;
+}
+input[type="date"].direct-add-date-empty:focus::-webkit-datetime-edit-fields-wrapper {
+  opacity: 1;
+}
+
