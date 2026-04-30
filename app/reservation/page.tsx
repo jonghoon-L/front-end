@@ -372,19 +372,19 @@ export default function ReservationPage() {
                   )}
                 </>
               ) : null}
-              <div className="flex rounded-xl border border-gray-200 overflow-hidden bg-gray-50/50">
+              <div className="flex w-full items-center gap-2 rounded-xl border border-gray-200 overflow-hidden bg-gray-50/50">
                 <input
                   type="tel"
                   placeholder="핸드폰번호를 적어주세요"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
-                  className="flex-1 py-3 px-4 border-0 text-base text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-0 bg-transparent"
+                  className="min-w-0 flex-1 py-3 px-4 border-0 text-base text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-0 bg-transparent"
                 />
                 <button
                   type="button"
                   onClick={handleSendVerification}
                   disabled={sendCodeLoading}
-                  className="shrink-0 cursor-pointer py-3 px-5 bg-gray-100 text-gray-600 text-base font-medium hover:bg-gray-200 whitespace-nowrap border-l border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="shrink-0 whitespace-nowrap cursor-pointer py-3 px-2 text-sm md:px-5 md:text-base bg-gray-100 text-gray-600 font-medium hover:bg-gray-200 border-l border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {sendCodeLoading ? "발송 중…" : "인증번호 받기"}
                 </button>
@@ -392,7 +392,7 @@ export default function ReservationPage() {
               {sendCodeError && <p className="text-sm text-red-600">{sendCodeError}</p>}
               {verificationSent && (
                 <>
-                  <div className="flex rounded-xl border border-gray-200 overflow-hidden bg-gray-50/50">
+                  <div className="flex w-full items-center gap-2 rounded-xl border border-gray-200 overflow-hidden bg-gray-50/50">
                     <input
                       type="text"
                       placeholder="인증번호를 입력해주세요"
@@ -403,13 +403,13 @@ export default function ReservationPage() {
                         setVerificationToken(null);
                       }}
                       disabled={phoneVerified}
-                      className="flex-1 py-3 px-4 border-0 text-base text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-0 bg-transparent disabled:bg-gray-50 disabled:text-gray-500"
+                      className="min-w-0 flex-1 py-3 px-4 border-0 text-base text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-0 bg-transparent disabled:bg-gray-50 disabled:text-gray-500"
                     />
                     <button
                       type="button"
                       onClick={handleVerifyCode}
                       disabled={phoneVerified || verifyLoading || !verificationCode.trim()}
-                      className="shrink-0 cursor-pointer py-3 px-5 bg-gray-100 text-gray-600 text-base font-medium hover:bg-gray-200 whitespace-nowrap border-l border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="shrink-0 whitespace-nowrap cursor-pointer py-3 px-2 text-sm md:px-5 md:text-base bg-gray-100 text-gray-600 font-medium hover:bg-gray-200 border-l border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {phoneVerified ? "인증 완료" : verifyLoading ? "확인 중…" : "인증하기"}
                     </button>
