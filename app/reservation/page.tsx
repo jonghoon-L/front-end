@@ -384,7 +384,7 @@ export default function ReservationPage() {
                   type="button"
                   onClick={handleSendVerification}
                   disabled={sendCodeLoading}
-                  className="shrink-0 whitespace-nowrap cursor-pointer py-3 px-2 text-sm md:px-5 md:text-base bg-gray-100 text-gray-600 font-medium hover:bg-gray-200 border-l border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-28 md:w-32 shrink-0 whitespace-nowrap text-center cursor-pointer py-3 px-2 text-sm md:px-5 md:text-base bg-gray-100 text-gray-600 font-medium hover:bg-gray-200 border-l border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {sendCodeLoading ? "발송 중…" : "인증번호 받기"}
                 </button>
@@ -409,7 +409,7 @@ export default function ReservationPage() {
                       type="button"
                       onClick={handleVerifyCode}
                       disabled={phoneVerified || verifyLoading || !verificationCode.trim()}
-                      className="shrink-0 whitespace-nowrap cursor-pointer py-3 px-2 text-sm md:px-5 md:text-base bg-gray-100 text-gray-600 font-medium hover:bg-gray-200 border-l border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-28 md:w-32 shrink-0 whitespace-nowrap text-center cursor-pointer py-3 px-2 text-sm md:px-5 md:text-base bg-gray-100 text-gray-600 font-medium hover:bg-gray-200 border-l border-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {phoneVerified ? "인증 완료" : verifyLoading ? "확인 중…" : "인증하기"}
                     </button>
