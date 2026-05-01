@@ -8,24 +8,17 @@ import { ChevronLeft, ChevronRight, Pin, Pencil } from "lucide-react";
 import { useFadeIn } from "@/hooks/useFadeIn";
 import { maskName } from "@/lib/maskName";
 
+/** 목록·상세 공통 후기 행 */
 interface ReviewItem {
   reviewId: number;
   title: string;
   authorName: string;
   viewCount: number;
   createdAt: string;
-  isTop: boolean;
+  isTop?: boolean;
 }
 
-interface ReviewsListResponse {
-  currentPage: number;
-  totalPages: number;
-  totalElements: number;
-  reviews: ReviewItem[];
-}
-
-/** 목록 API 페이지 크기 — 관리자 후기 페이지(REVIEW_LIST_PAGE_SIZE)와 동일 */
-const REVIEW_LIST_PAGE_SIZE = 10;
+const NORMAL_PAGE_SIZE = 10;
 
 function coerceCount(v: unknown): number | undefined {
   if (typeof v === "number" && Number.isFinite(v)) return v;
@@ -36,92 +29,66 @@ function coerceCount(v: unknown): number | undefined {
   return undefined;
 }
 
-/**
- * Spring Page / 공통 래핑 등으로 `totalElements` 위치가 달라져도 찾음.
- * 관리자 `fetchAdminReviews`가 받는 JSON과 동일 필드면 반드시 잡혀야 함.
- */
-function extractTotalElementsFromBody(raw: unknown): number {
+function unwrapRecord(raw: unknown): Record<string, unknown> {
   const r = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
   const dataVal = r.data;
-  const dataObj =
-    dataVal && typeof dataVal === "object" && !Array.isArray(dataVal)
-      ? (dataVal as Record<string, unknown>)
-      : null;
-  const pageObj =
-    r.page && typeof r.page === "object"
-      ? (r.page as Record<string, unknown>)
-      : null;
-
-  const tryKeys = (obj: Record<string, unknown>) =>
-    coerceCount(obj.totalElements) ??
-    coerceCount(obj.total_elements) ??
-    coerceCount(obj.total);
-
-  const candidates: (number | undefined)[] = [
-    tryKeys(r),
-    dataObj ? tryKeys(dataObj) : undefined,
-    pageObj ? tryKeys(pageObj) : undefined,
-    dataObj && typeof dataObj.page === "object"
-      ? tryKeys(dataObj.page as Record<string, unknown>)
-      : undefined,
-  ];
-
-  for (const c of candidates) {
-    if (c !== undefined && c >= 0) return Math.floor(c);
+  if (dataVal && typeof dataVal === "object" && !Array.isArray(dataVal)) {
+    return dataVal as Record<string, unknown>;
   }
-  return 0;
+  return r;
 }
 
-/**
- * 공통 클라이언트 목록 API가 totalElements를 안 내려줄 때(필드 자체 없음).
- * 관리자 API처럼 totalElements가 오면 위 extract만 쓰면 됨.
- */
-function inferTotalElementsWhenMissing(
-  totalPages: number,
-  currentPage: number,
-  reviewsLength: number,
-  pageSize: number
-): number {
-  if (reviewsLength <= 0) return 0;
-  if (totalPages <= 1) return reviewsLength;
-  if (currentPage === totalPages) {
-    return (totalPages - 1) * pageSize + reviewsLength;
+/** GET /v1/common/reviews/top — 배열 또는 래핑 객체 */
+function parseTopReviewsResponse(raw: unknown): ReviewItem[] {
+  if (Array.isArray(raw)) {
+    return raw.filter((x) => x && typeof x === "object") as ReviewItem[];
   }
-  return reviewsLength + (totalPages - currentPage);
+  const obj = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  if (Array.isArray(obj.data)) {
+    return (obj.data as unknown[]).filter((x) => x && typeof x === "object") as ReviewItem[];
+  }
+  const inner = unwrapRecord(raw);
+  if (Array.isArray(inner.reviews)) {
+    return (inner.reviews as unknown[]).filter((x) => x && typeof x === "object") as ReviewItem[];
+  }
+  if (Array.isArray(inner.content)) {
+    return (inner.content as unknown[]).filter((x) => x && typeof x === "object") as ReviewItem[];
+  }
+  return [];
 }
 
-/** 관리자 목록 API와 동일하게 응답 정규화 (totalElements + reviews) */
-function parseReviewsListResponse(raw: unknown): ReviewsListResponse {
-  const r = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
-  /** `data`가 배열이면 메타데이터는 보통 루트(r)에 있음 — inner로 쓰면 totalElements를 놓침 */
-  const inner: Record<string, unknown> =
-    r.data && typeof r.data === "object" && !Array.isArray(r.data)
-      ? (r.data as Record<string, unknown>)
-      : r;
-  const pick = (key: string) => inner[key] ?? r[key];
+/** GET /v1/common/reviews?page=&size= — { content, page: { totalElements, totalPages, ... } } */
+function parseNormalReviewsResponse(raw: unknown): {
+  content: ReviewItem[];
+  totalElements: number;
+  totalPages: number;
+} {
+  const inner = unwrapRecord(raw);
+  const pick = (k: string) => inner[k] ?? (raw as Record<string, unknown>)?.[k];
 
-  const reviewsRaw = pick("reviews") ?? pick("content");
-  const reviews = Array.isArray(reviewsRaw) ? (reviewsRaw as ReviewItem[]) : [];
+  const contentRaw = pick("content");
+  const content = Array.isArray(contentRaw) ? (contentRaw as ReviewItem[]) : [];
 
-  const tp = pick("totalPages") ?? pick("total_pages");
-  const totalPages =
-    typeof tp === "number" && Number.isFinite(tp) && tp > 0 ? tp : 1;
+  const pageRaw = pick("page");
+  const page =
+    pageRaw && typeof pageRaw === "object" && !Array.isArray(pageRaw)
+      ? (pageRaw as Record<string, unknown>)
+      : {};
 
-  const cp = pick("currentPage") ?? pick("current_page");
-  const currentPage =
-    typeof cp === "number" && Number.isFinite(cp) && cp > 0 ? cp : 1;
+  const totalElements =
+    coerceCount(page.totalElements) ??
+    coerceCount(page.total_elements) ??
+    coerceCount(inner.totalElements) ??
+    0;
 
-  let totalElements = extractTotalElementsFromBody(raw);
-  if (totalElements <= 0 && reviews.length > 0) {
-    totalElements = inferTotalElementsWhenMissing(
-      totalPages,
-      currentPage,
-      reviews.length,
-      REVIEW_LIST_PAGE_SIZE
-    );
-  }
+  const tp = coerceCount(page.totalPages) ?? coerceCount(page.total_pages);
+  const totalPages = tp !== undefined && tp > 0 ? Math.floor(tp) : 1;
 
-  return { currentPage, totalPages, totalElements, reviews };
+  return {
+    content,
+    totalElements: Math.max(0, Math.floor(totalElements)),
+    totalPages,
+  };
 }
 
 function formatCreatedAt(iso: string): string {
@@ -133,36 +100,82 @@ function formatCreatedAt(iso: string): string {
   }
 }
 
+function fetchTopReviews(): Promise<ReviewItem[]> {
+  return apiGet<unknown>("/v1/common/reviews/top", {
+    useRelativePath: true,
+    headers: { "Content-Type": "application/json" },
+  }).then((res) => parseTopReviewsResponse(res));
+}
+
+function fetchNormalReviewsPage(uiPage: number): Promise<{
+  content: ReviewItem[];
+  totalElements: number;
+  totalPages: number;
+}> {
+  const zeroBasedPage = Math.max(0, uiPage - 1);
+  return apiGet<unknown>(
+    `/v1/common/reviews?page=${zeroBasedPage}&size=${NORMAL_PAGE_SIZE}`,
+    {
+      useRelativePath: true,
+      headers: { "Content-Type": "application/json" },
+    }
+  ).then((res) => parseNormalReviewsResponse(res));
+}
+
 export default function ReviewsPage() {
   const [currentPage, setCurrentPage] = useState(1);
-  const [data, setData] = useState<ReviewsListResponse | null>(null);
+  const [topReviews, setTopReviews] = useState<ReviewItem[]>([]);
+  const [normalReviews, setNormalReviews] = useState<ReviewItem[]>([]);
+  const [totalElements, setTotalElements] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const fade = useFadeIn(0.1);
   const contentTopRef = useRef<HTMLElement | null>(null);
+  const topReviewsLoadedRef = useRef(false);
+  const currentPageRef = useRef(currentPage);
+  currentPageRef.current = currentPage;
 
   useEffect(() => {
     let cancelled = false;
+    const uiPageAtStart = currentPage;
     setLoading(true);
     setError(null);
-    apiGet<unknown>(`/v1/common/reviews?page=${currentPage}`, {
-      useRelativePath: true,
-      headers: { "Content-Type": "application/json" },
-    })
-      .then((res) => {
-        if (cancelled) return;
-        setData(parseReviewsListResponse(res));
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        setError(
-          err instanceof Error ? err.message : "목록을 불러오지 못했습니다."
-        );
-        setData(null);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+
+    const applyNormal = (normal: { content: ReviewItem[]; totalElements: number; totalPages: number }) => {
+      if (cancelled || currentPageRef.current !== uiPageAtStart) return;
+      setNormalReviews(normal.content);
+      setTotalElements(normal.totalElements);
+      setTotalPages(normal.totalPages);
+    };
+
+    const run = async () => {
+      try {
+        if (!topReviewsLoadedRef.current) {
+          const [tops, normal] = await Promise.all([
+            fetchTopReviews(),
+            fetchNormalReviewsPage(uiPageAtStart),
+          ]);
+          if (cancelled || currentPageRef.current !== uiPageAtStart) return;
+          setTopReviews(tops);
+          topReviewsLoadedRef.current = true;
+          applyNormal(normal);
+        } else {
+          const normal = await fetchNormalReviewsPage(uiPageAtStart);
+          applyNormal(normal);
+        }
+      } catch (err) {
+        if (cancelled || currentPageRef.current !== uiPageAtStart) return;
+        setError(err instanceof Error ? err.message : "목록을 불러오지 못했습니다.");
+        setNormalReviews([]);
+        setTotalElements(0);
+        setTotalPages(1);
+      } finally {
+        if (!cancelled && currentPageRef.current === uiPageAtStart) setLoading(false);
+      }
+    };
+
+    void run();
     return () => {
       cancelled = true;
     };
@@ -188,12 +201,7 @@ export default function ReviewsPage() {
     contentTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [currentPage]);
 
-  const pagedPosts = data?.reviews ?? [];
-  const totalPages = data?.totalPages ?? 1;
-  /** 관리자 페이지와 동일: 목록 응답의 totalElements */
-  const totalElements = data?.totalElements ?? 0;
-  /** 이번 페이지 우수 후기 — 수식에서만큼 제외 */
-  const bestReviews = pagedPosts.filter((p) => p.isTop);
+  const hasAnyRows = topReviews.length > 0 || normalReviews.length > 0;
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-white">
@@ -201,9 +209,7 @@ export default function ReviewsPage() {
         imageUrl="/images/note.jpg"
         heroStyle={{ backgroundPosition: "center 5%" }}
         lines={["이용 후기"]}
-        crumbs={[
-          { label: "이용 후기", href: "/board/reviews" },
-        ]}
+        crumbs={[{ label: "이용 후기", href: "/board/reviews" }]}
       />
 
       <section
@@ -213,7 +219,6 @@ export default function ReviewsPage() {
         }}
         className="mx-auto max-w-7xl px-4 sm:px-6 py-10 lg:py-14"
       >
-        {/* 인트로 타이틀 (다른 페이지와 동일 스타일) */}
         <h2
           className="mb-20 mt-0 text-center text-3xl font-bold leading-tight text-gray-900 md:text-4xl transition-all duration-700 ease-out"
           style={{
@@ -225,7 +230,7 @@ export default function ReviewsPage() {
           <span className="block">솔직한 경험을 확인해 보세요</span>
         </h2>
 
-        {/* 모바일·태블릿: 카드 리스트 */}
+        {/* 모바일·태블릿 */}
         <div
           className="lg:hidden space-y-3 transition-all duration-700 ease-out"
           style={{
@@ -243,62 +248,67 @@ export default function ReviewsPage() {
             <div className="rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-slate-200/60">
               <p className="text-red-600">{error}</p>
             </div>
-          ) : pagedPosts.length === 0 ? (
+          ) : !hasAnyRows ? (
             <div className="rounded-2xl bg-white p-12 text-center shadow-sm ring-1 ring-slate-200/60">
               <p className="text-slate-500">등록된 후기가 없습니다.</p>
             </div>
           ) : (
-          pagedPosts.map((post, rowIndex) => {
-            const isPinned = post.isTop;
-            const index = pagedPosts
-              .slice(0, rowIndex)
-              .filter((p) => !p.isTop).length;
-            return (
-              <Link
-                key={post.reviewId}
-                href={`/board/reviews/${post.reviewId}`}
-                className={`block rounded-2xl p-5 transition-shadow hover:shadow-md active:scale-[0.99] ${
-                  isPinned
-                    ? "bg-slate-100 shadow-sm ring-1 ring-slate-300/80"
-                    : "bg-white shadow-sm ring-1 ring-slate-200/60"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-2 flex flex-wrap items-center gap-2">
-                      {isPinned ? (
+            <>
+              {topReviews.map((post) => (
+                <Link
+                  key={`top-${post.reviewId}`}
+                  href={`/board/reviews/${post.reviewId}`}
+                  className="block rounded-2xl bg-slate-100 p-5 shadow-sm ring-1 ring-slate-300/80 transition-shadow hover:shadow-md active:scale-[0.99]"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-2 flex flex-wrap items-center gap-2">
                         <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-900">
                           <Pin className="h-3 w-3" />
                           우수 후기
                         </span>
-                      ) : (
-                        <span className="text-xs font-medium text-slate-400">
-                          #
-                          {totalElements -
-                            bestReviews.length -
-                            (currentPage - 1) * REVIEW_LIST_PAGE_SIZE -
-                            index}
-                        </span>
-                      )}
+                      </div>
+                      <h3 className="line-clamp-2 font-bold text-slate-900">{post.title}</h3>
+                      <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-slate-700">
+                        <span>{maskName(post.authorName)}</span>
+                        <span>{formatCreatedAt(post.createdAt)}</span>
+                        <span>조회 {post.viewCount}</span>
+                      </div>
                     </div>
-                    <h3 className={`line-clamp-2 ${isPinned ? "font-bold text-slate-900" : "font-semibold text-slate-800"}`}>
-                      {post.title}
-                    </h3>
-                    <div className={`mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs ${isPinned ? "font-semibold text-slate-700" : "text-slate-500"}`}>
-                      <span>{maskName(post.authorName)}</span>
-                      <span>{formatCreatedAt(post.createdAt)}</span>
-                      <span>조회 {post.viewCount}</span>
-                    </div>
+                    <ChevronRight className="h-5 w-5 shrink-0 text-slate-300" />
                   </div>
-                  <ChevronRight className="h-5 w-5 shrink-0 text-slate-300" />
-                </div>
-              </Link>
-            );
-          })
+                </Link>
+              ))}
+              {normalReviews.map((post, index) => {
+                const displayNumber = totalElements - (currentPage - 1) * NORMAL_PAGE_SIZE - index;
+                return (
+                  <Link
+                    key={post.reviewId}
+                    href={`/board/reviews/${post.reviewId}`}
+                    className="block rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200/60 transition-shadow hover:shadow-md active:scale-[0.99]"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <div className="mb-2 flex flex-wrap items-center gap-2">
+                          <span className="text-xs font-medium text-slate-400">#{displayNumber}</span>
+                        </div>
+                        <h3 className="line-clamp-2 font-semibold text-slate-800">{post.title}</h3>
+                        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+                          <span>{maskName(post.authorName)}</span>
+                          <span>{formatCreatedAt(post.createdAt)}</span>
+                          <span>조회 {post.viewCount}</span>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-5 w-5 shrink-0 text-slate-300" />
+                    </div>
+                  </Link>
+                );
+              })}
+            </>
           )}
         </div>
 
-        {/* 데스크톱: 테이블 */}
+        {/* 데스크톱 테이블 */}
         <div
           className="hidden lg:block overflow-hidden bg-white shadow-sm ring-1 ring-slate-200/60 transition-all duration-700 ease-out"
           style={{
@@ -340,64 +350,82 @@ export default function ReviewsPage() {
                   </tr>
                 ) : error ? (
                   <tr>
-                    <td colSpan={5} className="px-8 py-16 text-center text-red-600">{error}</td>
+                    <td colSpan={5} className="px-8 py-16 text-center text-red-600">
+                      {error}
+                    </td>
                   </tr>
-                ) : pagedPosts.length === 0 ? (
+                ) : !hasAnyRows ? (
                   <tr>
-                    <td colSpan={5} className="px-8 py-16 text-center text-slate-500">등록된 후기가 없습니다.</td>
+                    <td colSpan={5} className="px-8 py-16 text-center text-slate-500">
+                      등록된 후기가 없습니다.
+                    </td>
                   </tr>
                 ) : (
-                pagedPosts.map((post, rowIndex) => {
-                  const isPinned = post.isTop;
-                  const index = pagedPosts
-                    .slice(0, rowIndex)
-                    .filter((p) => !p.isTop).length;
-                  return (
-                    <tr
-                      key={post.reviewId}
-                      className={`group transition-colors ${
-                        isPinned ? "bg-slate-100 hover:bg-slate-200/80" : "hover:bg-slate-50/70"
-                      }`}
-                    >
-                      <td className="px-8 py-5 text-center">
-                        {isPinned ? (
+                  <>
+                    {topReviews.map((post) => (
+                      <tr
+                        key={`top-${post.reviewId}`}
+                        className="group bg-slate-100 transition-colors hover:bg-slate-200/80"
+                      >
+                        <td className="px-8 py-5 text-center">
                           <span className="inline-flex items-center gap-1 text-sm font-bold text-slate-900">
                             <Pin className="h-3.5 w-3.5" />
                             우수 후기
                           </span>
-                        ) : (
-                          <span className="text-sm font-medium text-slate-400">
-                            {totalElements -
-                              bestReviews.length -
-                              (currentPage - 1) * REVIEW_LIST_PAGE_SIZE -
-                              index}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-8 py-5">
-                        <Link
-                          href={`/board/reviews/${post.reviewId}`}
-                          className={`inline-flex items-center gap-1 text-base ${
-                            isPinned ? "font-bold text-slate-900" : "font-medium text-slate-800"
-                          }`}
-                        >
-                          {post.title}
-                          <ChevronRight className="h-4 w-4 shrink-0 opacity-0 transition-opacity group-hover:opacity-100" />
-                        </Link>
-                      </td>
-                      <td className={`px-8 py-5 text-center text-base ${isPinned ? "font-semibold text-slate-800" : "text-slate-500"}`}>{maskName(post.authorName)}</td>
-                      <td className={`px-8 py-5 text-center text-base ${isPinned ? "font-semibold text-slate-800" : "text-slate-500"}`}>{formatCreatedAt(post.createdAt)}</td>
-                      <td className={`px-8 py-5 text-center text-base ${isPinned ? "font-semibold text-slate-800" : "text-slate-400"}`}>{post.viewCount}</td>
-                    </tr>
-                  );
-                })
+                        </td>
+                        <td className="px-8 py-5">
+                          <Link
+                            href={`/board/reviews/${post.reviewId}`}
+                            className="inline-flex items-center gap-1 text-base font-bold text-slate-900"
+                          >
+                            {post.title}
+                            <ChevronRight className="h-4 w-4 shrink-0 opacity-0 transition-opacity group-hover:opacity-100" />
+                          </Link>
+                        </td>
+                        <td className="px-8 py-5 text-center text-base font-semibold text-slate-800">
+                          {maskName(post.authorName)}
+                        </td>
+                        <td className="px-8 py-5 text-center text-base font-semibold text-slate-800">
+                          {formatCreatedAt(post.createdAt)}
+                        </td>
+                        <td className="px-8 py-5 text-center text-base font-semibold text-slate-800">
+                          {post.viewCount}
+                        </td>
+                      </tr>
+                    ))}
+                    {normalReviews.map((post, index) => {
+                      const displayNumber = totalElements - (currentPage - 1) * NORMAL_PAGE_SIZE - index;
+                      return (
+                        <tr key={post.reviewId} className="group transition-colors hover:bg-slate-50/70">
+                          <td className="px-8 py-5 text-center">
+                            <span className="text-sm font-medium text-slate-400">{displayNumber}</span>
+                          </td>
+                          <td className="px-8 py-5">
+                            <Link
+                              href={`/board/reviews/${post.reviewId}`}
+                              className="inline-flex items-center gap-1 text-base font-medium text-slate-800"
+                            >
+                              {post.title}
+                              <ChevronRight className="h-4 w-4 shrink-0 opacity-0 transition-opacity group-hover:opacity-100" />
+                            </Link>
+                          </td>
+                          <td className="px-8 py-5 text-center text-base text-slate-500">
+                            {maskName(post.authorName)}
+                          </td>
+                          <td className="px-8 py-5 text-center text-base text-slate-500">
+                            {formatCreatedAt(post.createdAt)}
+                          </td>
+                          <td className="px-8 py-5 text-center text-base text-slate-400">{post.viewCount}</td>
+                        </tr>
+                      );
+                    })}
+                  </>
                 )}
               </tbody>
             </table>
           </div>
         </div>
 
-        {/* 페이지네이션 */}
         {!loading && !error && totalPages > 1 && (
           <div
             className="transition-all duration-700 ease-out"
@@ -407,46 +435,43 @@ export default function ReviewsPage() {
               transitionDelay: fade.isVisible ? "240ms" : "0ms",
             }}
           >
-          <nav className="mt-8 flex items-center justify-center gap-1" aria-label="페이지 선택">
-            <button
-              type="button"
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage <= 1}
-              className="inline-flex h-9 w-9 flex-shrink-0 cursor-pointer items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent"
-              aria-label="이전 페이지"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-            <div className="flex items-center gap-0.5">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  type="button"
-                  onClick={() => setCurrentPage(page)}
-                  className={`flex h-9 w-9 flex-shrink-0 cursor-pointer items-center justify-center rounded-full text-sm font-medium transition-colors ${
-                    currentPage === page
-                      ? "bg-slate-800 text-white"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage >= totalPages}
-              className="inline-flex h-9 w-9 flex-shrink-0 cursor-pointer items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent"
-              aria-label="다음 페이지"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </nav>
+            <nav className="mt-8 flex items-center justify-center gap-1" aria-label="페이지 선택">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage <= 1}
+                className="inline-flex h-9 w-9 flex-shrink-0 cursor-pointer items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent"
+                aria-label="이전 페이지"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <div className="flex items-center gap-0.5">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    type="button"
+                    onClick={() => setCurrentPage(page)}
+                    className={`flex h-9 w-9 flex-shrink-0 cursor-pointer items-center justify-center rounded-full text-sm font-medium transition-colors ${
+                      currentPage === page ? "bg-slate-800 text-white" : "text-gray-600 hover:bg-gray-100"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages}
+                className="inline-flex h-9 w-9 flex-shrink-0 cursor-pointer items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent"
+                aria-label="다음 페이지"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </nav>
           </div>
         )}
 
-        {/* 내 후기 조회, 후기 작성 */}
         <div
           className="mt-8 flex flex-wrap items-center justify-end gap-2 transition-all duration-700 ease-out"
           style={{
