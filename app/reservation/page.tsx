@@ -4,6 +4,11 @@ import { useState, useRef } from "react";
 import { apiPost, AUTH_TOKEN_KEY } from "@/api/apiClient";
 import { sendVerificationCode, verifyAuthCode } from "@/api/auth";
 import MessageModal from "@/components/MessageModal";
+import ClosedNotice from "@/components/ClosedNotice";
+import {
+  getReservationClosedLines,
+  isReservationClosed,
+} from "@/lib/bookingAvailability";
 
 type Season = "SEMESTER_1" | "SEMESTER_2" | "SUMMER" | "WINTER";
 type Branch = "N" | "Hi-end";
@@ -90,7 +95,9 @@ export default function ReservationPage() {
   const [isExistingError, setIsExistingError] = useState<string | null>(null);
   const [genderError, setGenderError] = useState<string | null>(null);
 
-  const showBranchSelection = season !== null && needsBranch(season);
+  const isClosed = isReservationClosed(season);
+  const closedNoticeLines = getReservationClosedLines(season);
+  const showBranchSelection = season !== null && needsBranch(season) && !isClosed;
 
   const handleSeasonChange = (s: Season) => {
     setSeason(s);
@@ -144,6 +151,7 @@ export default function ReservationPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isReservationClosed(season)) return;
     setIsExistingError(null);
     setGenderError(null);
     if (!season || !name.trim() || !phoneNumber.trim() || !phoneVerified || !verificationToken) return;
@@ -279,6 +287,9 @@ export default function ReservationPage() {
           )}
 
           {/* 간단한 정보 */}
+          {isClosed && closedNoticeLines ? (
+            <ClosedNotice lines={closedNoticeLines} />
+          ) : (
           <form onSubmit={handleSubmit}>
             <h3 className="text-gray-900 font-medium text-base mb-2">간단한 정보만 적어주세요</h3>
             <hr className="border-gray-100 mb-3" />
@@ -430,6 +441,7 @@ export default function ReservationPage() {
               등록 신청
             </button>
           </form>
+          )}
         </div>
       </section>
       <MessageModal
