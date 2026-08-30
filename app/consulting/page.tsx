@@ -8,12 +8,6 @@ import { sendVerificationCode, verifyAuthCode } from "@/api/auth";
 import { fetchUnavailableSchedules } from "@/api/consultations";
 import { getConsultationMinSelectableDateStr } from "@/lib/consultationDateRules";
 import MessageModal from "@/components/MessageModal";
-import ClosedNotice from "@/components/ClosedNotice";
-import ConsultingLoadNotice from "@/components/ConsultingLoadNotice";
-import {
-  CONSULTATION_CLOSED_HI_END_LINES,
-  isConsultationClosed,
-} from "@/lib/bookingAvailability";
 
 type Branch = "N" | "Hi-end";
 
@@ -86,7 +80,7 @@ export default function ConsultingPage() {
   }, [calendarMonth]);
 
   useEffect(() => {
-    if (!branch || isConsultationClosed(branch)) {
+    if (!branch) {
       setScheduleData(null);
       return;
     }
@@ -175,7 +169,6 @@ export default function ConsultingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isConsultationClosed(branch)) return;
     const minDate = getConsultationMinSelectableDateStr();
     if (
       !branch ||
@@ -214,7 +207,6 @@ export default function ConsultingPage() {
   };
 
   const minSelectableDateStr = getConsultationMinSelectableDateStr();
-  const isClosed = isConsultationClosed(branch);
 
   return (
     <main>
@@ -253,11 +245,6 @@ export default function ConsultingPage() {
           </div>
 
           {/* 날짜·시간 선택 */}
-          {isClosed ? (
-            <div className="mb-10">
-              <ClosedNotice lines={CONSULTATION_CLOSED_HI_END_LINES} />
-            </div>
-          ) : (
           <div className="mb-10">
             <h3 className="text-gray-900 font-medium text-base mb-2">상담을 원하는 시간을 선택해주세요</h3>
             <hr className="border-gray-200 mb-4" />
@@ -370,10 +357,8 @@ export default function ConsultingPage() {
               </div>
             )}
           </div>
-          )}
 
           {/* 간단한 정보 */}
-          {!isClosed && (
           <form onSubmit={handleSubmit}>
             <h3 className="text-gray-900 font-medium text-base mb-2">간단한 정보만 적어주세요</h3>
             <hr className="border-gray-100 mb-3" />
@@ -488,7 +473,6 @@ export default function ConsultingPage() {
               신청서 제출
             </button>
           </form>
-          )}
         </div>
       </section>
       <MessageModal
@@ -500,7 +484,6 @@ export default function ConsultingPage() {
           if (reload) window.location.reload();
         }}
       />
-      <ConsultingLoadNotice />
     </main>
   );
 }
