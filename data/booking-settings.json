@@ -1,0 +1,14 @@
+{
+  "consultation": {
+    "N": false,
+    "Hi-end": false
+  },
+  "reservation": {
+    "SEMESTER_1_N": false,
+    "SEMESTER_1_HI": false,
+    "SEMESTER_2_N": false,
+    "SEMESTER_2_HI": false,
+    "SUMMER": false,
+    "WINTER": true
+  }
+}

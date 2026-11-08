@@ -8,6 +8,12 @@ import { sendVerificationCode, verifyAuthCode } from "@/api/auth";
 import { fetchUnavailableSchedules } from "@/api/consultations";
 import { getConsultationMinSelectableDateStr } from "@/lib/consultationDateRules";
 import MessageModal from "@/components/MessageModal";
+import ClosedNotice from "@/components/ClosedNotice";
+import { useBookingSettings } from "@/hooks/useBookingSettings";
+import {
+  CONSULTATION_CLOSED_LINES,
+  isConsultationOpen,
+} from "@/lib/bookingAvailability";
 
 type Branch = "N" | "Hi-end";
 
@@ -45,6 +51,7 @@ async function submitConsultation(
 }
 
 export default function ConsultingPage() {
+  const { settings } = useBookingSettings();
   const [branch, setBranch] = useState<Branch | null>(null);
   const [calendarMonth, setCalendarMonth] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -79,8 +86,10 @@ export default function ConsultingPage() {
     return `${y}-${m}`;
   }, [calendarMonth]);
 
+  const consultationOpen = isConsultationOpen(settings, branch);
+
   useEffect(() => {
-    if (!branch) {
+    if (!branch || !isConsultationOpen(settings, branch)) {
       setScheduleData(null);
       return;
     }
@@ -97,7 +106,7 @@ export default function ConsultingPage() {
       })
       .catch((err) => setScheduleError(err instanceof Error ? err.message : "스케줄을 불러오지 못했습니다."))
       .finally(() => setScheduleLoading(false));
-  }, [branch, yearMonthStr]);
+  }, [branch, yearMonthStr, settings]);
 
   const allTimeSlots = useMemo(() => {
     if (!selectedDate || !branch) return [];
@@ -169,6 +178,7 @@ export default function ConsultingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isConsultationOpen(settings, branch)) return;
     const minDate = getConsultationMinSelectableDateStr();
     if (
       !branch ||
@@ -249,6 +259,10 @@ export default function ConsultingPage() {
             <h3 className="text-gray-900 font-medium text-base mb-2">상담을 원하는 시간을 선택해주세요</h3>
             <hr className="border-gray-200 mb-4" />
 
+            {branch && !consultationOpen ? (
+              <ClosedNotice lines={CONSULTATION_CLOSED_LINES} />
+            ) : (
+              <>
             {scheduleError && (
               <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
                 {scheduleError}
@@ -356,9 +370,12 @@ export default function ConsultingPage() {
                 </div>
               </div>
             )}
+              </>
+            )}
           </div>
 
           {/* 간단한 정보 */}
+          {(!branch || consultationOpen) && (
           <form onSubmit={handleSubmit}>
             <h3 className="text-gray-900 font-medium text-base mb-2">간단한 정보만 적어주세요</h3>
             <hr className="border-gray-100 mb-3" />
@@ -473,6 +490,7 @@ export default function ConsultingPage() {
               신청서 제출
             </button>
           </form>
+          )}
         </div>
       </section>
       <MessageModal

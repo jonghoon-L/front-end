@@ -5,9 +5,10 @@ import { apiPost, AUTH_TOKEN_KEY } from "@/api/apiClient";
 import { sendVerificationCode, verifyAuthCode } from "@/api/auth";
 import MessageModal from "@/components/MessageModal";
 import ClosedNotice from "@/components/ClosedNotice";
+import { useBookingSettings } from "@/hooks/useBookingSettings";
 import {
-  getReservationClosedLines,
-  isReservationClosed,
+  RESERVATION_CLOSED_LINES,
+  isReservationOpen,
 } from "@/lib/bookingAvailability";
 
 type Season = "SEMESTER_1" | "SEMESTER_2" | "SUMMER" | "WINTER";
@@ -70,6 +71,7 @@ async function submitWaitlist(
 const needsBranch = (season: Season) => season === "SEMESTER_1" || season === "SEMESTER_2";
 
 export default function ReservationPage() {
+  const { settings } = useBookingSettings();
   const [season, setSeason] = useState<Season | null>(null);
   const [branch, setBranch] = useState<Branch | null>(null);
   const [name, setName] = useState("");
@@ -95,9 +97,12 @@ export default function ReservationPage() {
   const [isExistingError, setIsExistingError] = useState<string | null>(null);
   const [genderError, setGenderError] = useState<string | null>(null);
 
-  const isClosed = isReservationClosed(season);
-  const closedNoticeLines = getReservationClosedLines(season);
-  const showBranchSelection = season !== null && needsBranch(season) && !isClosed;
+  const showBranchSelection = season !== null && needsBranch(season);
+  const isClosed =
+    season !== null &&
+    (needsBranch(season)
+      ? branch !== null && !isReservationOpen(settings, season, branch)
+      : !isReservationOpen(settings, season, null));
 
   const handleSeasonChange = (s: Season) => {
     setSeason(s);
@@ -151,7 +156,7 @@ export default function ReservationPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isReservationClosed(season)) return;
+    if (!isReservationOpen(settings, season, branch)) return;
     setIsExistingError(null);
     setGenderError(null);
     if (!season || !name.trim() || !phoneNumber.trim() || !phoneVerified || !verificationToken) return;
@@ -220,6 +225,8 @@ export default function ReservationPage() {
 
   const canSubmit =
     !!season &&
+    !isClosed &&
+    isReservationOpen(settings, season, branch) &&
     name.trim() &&
     gender !== null &&
     isExisting !== null &&
@@ -287,8 +294,8 @@ export default function ReservationPage() {
           )}
 
           {/* 간단한 정보 */}
-          {isClosed && closedNoticeLines ? (
-            <ClosedNotice lines={closedNoticeLines} />
+          {isClosed ? (
+            <ClosedNotice lines={RESERVATION_CLOSED_LINES} />
           ) : (
           <form onSubmit={handleSubmit}>
             <h3 className="text-gray-900 font-medium text-base mb-2">간단한 정보만 적어주세요</h3>

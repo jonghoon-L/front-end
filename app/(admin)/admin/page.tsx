@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Calendar, Users, MessageSquare } from "lucide-react";
+import AdminBookingControls from "@/components/AdminBookingControls";
 
 const adminMenuCards = [
   {
@@ -72,6 +73,8 @@ export default function AdminDashboardPage() {
           );
         })}
       </div>
+
+      <AdminBookingControls />
     </div>
   );
 }
